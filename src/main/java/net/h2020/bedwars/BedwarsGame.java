@@ -190,8 +190,10 @@ public final class BedwarsGame implements BedwarsView {
             if (bed.size() >= 2) t.bedHead = toLoc(bed.get(1), 0, false);
             t.generator = point(MapKeys.teamGenerator(c), true);
             if (t.generator == null) t.generator = t.spawn.clone();
-            t.shop = point(MapKeys.teamShop(c), true);
-            t.upgradesNpc = point(MapKeys.teamUpgrades(c), true);
+            // NPCs stand exactly where map.yml says: a whole number puts them on a block edge, e.g. centred in a
+            // 2-long pen
+            t.shop = point(MapKeys.teamShop(c), false);
+            t.upgradesNpc = point(MapKeys.teamUpgrades(c), false);
             List<Vector> base = pts(MapKeys.teamBase(c));
             if (base.size() >= 2) {
                 Vector a = base.get(0), b = base.get(1);

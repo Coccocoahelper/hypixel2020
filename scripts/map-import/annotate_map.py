@@ -208,13 +208,13 @@ def npc_spots(foot, head, spawn, centre, other_feet):
     chosen = None
     if len(pens) >= 2:
         a, b = pens[0], pens[1]
-        ca, cb = min(a, key=dist), min(b, key=dist)
-        if lat(ca) < lat(cb):
-            ca, cb = cb, ca
-        chosen = (ca, cb)
+        if lat(min(a, key=dist)) < lat(min(b, key=dist)):
+            a, b = b, a
+        chosen = (a, b)
     elif len(pens) == 1 and len(pens[0]) >= 2:
         p = sorted(pens[0], key=fwd)
-        chosen = (p[-1], p[0])
+        half = len(p) // 2
+        chosen = (p[half:], p[:half])
     if chosen is None:
         def stand(c):
             return B.floor(c[0], c[2], floor) == floor
@@ -237,11 +237,15 @@ def npc_spots(foot, head, spawn, centre, other_feet):
                 break
         if best is None:  # no room on the sides: put them behind the spawn, either side of the centreline
             best = (cell(2, -2), cell(-2, -2))
-        chosen = best
+        chosen = ([best[0]], [best[1]])
     out = {}
-    for key, c in zip(("shop", "upgrades"), chosen):
+    for key, cells in zip(("shop", "upgrades"), chosen):
+        # the middle of the pen (a 2-long pen puts the NPC on the block edge between its two cells)
+        x = sum(c[0] + 0.5 for c in cells) / len(cells)
+        z = sum(c[2] + 0.5 for c in cells) / len(cells)
+        c = cells[0]
         y = B.floor(c[0], c[2], c[1]) or c[1]
-        out[key] = pt(c[0] + 0.5, y, c[2] + 0.5, yaw=yaw_towards(c[0] + 0.5, c[2] + 0.5, sx, sz))
+        out[key] = pt(x, y, z, yaw=yaw_towards(x, z, sx, sz))
     return out
 
 
