@@ -33,6 +33,14 @@ final class MovingConfig {
      * "0/0" velocity (ignoring S12 knockback) went unpunished. When on, MOVING_VELOCITY never judges a hit. Off by default.
      */
     boolean legacyVelocityGap;
+    /**
+     * watchdog.movement.legacy-2020-nofall-gap: Hypixel's 2020 Watchdog let the classic "Hypixel" NoFall through - a
+     * single onGround=true on the normal movement packet each time ~2.5-3 blocks have been fallen, which makes vanilla
+     * reset the fall distance before it ever reaches the damage threshold. When on, MOVING_NOFALL accepts exactly such
+     * a reset (see NoFall.legacyReset); constant onGround, a spoof held until landing and denied landings stay caught.
+     * Off by default.
+     */
+    boolean legacyNoFallGap;
 
     MovingConfig() {
         for (CheckType t : CheckType.values()) {
@@ -49,6 +57,7 @@ final class MovingConfig {
                 c.legacyHoverGap = m.getBoolean("legacy-2020-hover-gap", false);
                 c.legacyBhopGap = m.getBoolean("legacy-2020-bhop-gap", false);
                 c.legacyVelocityGap = m.getBoolean("legacy-2020-velocity-gap", false);
+                c.legacyNoFallGap = m.getBoolean("legacy-2020-nofall-gap", false);
                 for (CheckType t : CheckType.values()) {
                     if (t.group != CheckType.Group.MOVING && t.group != CheckType.Group.NET) continue;
                     String key = t.name().toLowerCase(Locale.ROOT);

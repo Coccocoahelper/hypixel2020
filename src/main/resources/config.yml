@@ -82,3 +82,6 @@ watchdog:
     legacy-2020-bhop-gap: false
     # Hypixel 2020 had no working anti-knockback check: 0/0 velocity went unpunished.
     legacy-2020-velocity-gap: false
+    # Hypixel 2020 let the classic "Hypixel" NoFall through: one onGround=true each time ~2.5-3 blocks were fallen
+    # resets the fall distance before it can damage. Constant onGround spoofs and denied landings stay caught.
+    legacy-2020-nofall-gap: false

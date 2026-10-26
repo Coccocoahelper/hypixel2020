@@ -13,6 +13,7 @@ import net.minecraft.server.v1_8_R3.DamageSource;
  * - a landing the client keeps denying for 2 ticks is damaged by us, NCP-style (DamageSource.FALL, so games see a
  *   normal fall death).
  * Water, ladders/vines, webs, slime blocks, allowFlight and creative reset/skip exactly like vanilla.
+ * Optional 2020 blind spot (watchdog.movement.legacy-2020-nofall-gap): see legacyReset.
  * Legit clients never trigger either path, so vanilla fall damage stays untouched for them.
  */
 final class NoFall {
@@ -92,11 +93,23 @@ final class NoFall {
             d.noFallDist = 0;
             d.spoofTicks = 0;
             d.spoofFlagged = false;
+            d.noFallLegacyPrev = false;
             return;
         }
 
+        double before = d.noFallDist; // what the server's own fall distance should be before this tick
         if (c.hasPos && c.dy < 0) d.noFallDist += -c.dy;
+        boolean legacyPrev = d.noFallLegacyPrev;
+        d.noFallLegacyPrev = false;
         if (c.hasPos && claim && !f.ground && !t.nearGround && c.dy < -0.05) {
+            if (eng.config.legacyNoFallGap && legacyReset(d, before, -c.dy, legacyPrev)) {
+                // 2020 blind spot (legacy-2020-nofall-gap): vanilla resets the fall distance on this claim exactly
+                // like Hypixel's 2020 Watchdog let it, so our own distance restarts from here too (this tick's dy is
+                // dropped by vanilla as well). No flag, and no restore/damage on the landing.
+                d.noFallDist = 0;
+                d.noFallLegacyPrev = true;
+                return;
+            }
             d.spoofTicks++;
             if (active && d.spoofTicks >= 3 && d.noFallDist > 1.0 && !d.spoofFlagged) {
                 d.spoofFlagged = true;
@@ -105,6 +118,24 @@ final class NoFall {
             }
         }
     }
+
+    /**
+     * The 2020 "Hypixel" NoFall: one onGround=true on the regular movement packet once the fall since the last reset
+     * passes ~2.5 blocks (client fallDistance > 2.5..3, then reset). Accepted only when
+     * - no off-pattern ground spoof happened in this fall (constant onGround / packet NoFall stays fully judged);
+     * - the previous packet did not claim ground, unless it was itself such a reset (at high fall speed every tick
+     *   covers more than 2.5 blocks, so the pattern resets every tick);
+     * - the distance vanilla discards is <= 3 (the reset comes before the damage threshold, never at the landing of
+     *   a longer fall) and, including this tick, at least ~2.5 blocks were fallen (not an every-tick spoof).
+     */
+    private static boolean legacyReset(MovingData d, double before, double fallThisTick, boolean legacyPrev) {
+        if (d.spoofTicks > 0) return false;
+        if (d.prevClientGround && !legacyPrev) return false;
+        return before <= 3.0 + 1.0E-3 && before + fallThisTick >= LEGACY_MIN_FALL;
+    }
+
+    /** Smallest fall (blocks, including the claim tick) the 2020 pattern resets after (clients used 2.5-3). */
+    private static final double LEGACY_MIN_FALL = 2.4;
 
     /** EntityLiving.e(fallDistance, 1.0): ceil(distance - 3 - jumpBoostLevel) through DamageSource.FALL. */
     static void deal(MoveContext c, double dist) {

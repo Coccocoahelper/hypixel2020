@@ -93,6 +93,8 @@ final class MovingData {
     double noFallPending;
     int noFallPendingTicks;
     boolean noFallPendingSpoofed;
+    /** The previous tick was a ground claim accepted by the legacy 2020 NoFall gap (see NoFall.legacyReset). */
+    boolean noFallLegacyPrev;
 
     // Hover
     int hoverTicks;
@@ -140,6 +142,7 @@ final class MovingData {
         spoofFlagged = false;
         noFallPending = 0;
         noFallPendingTicks = 0;
+        noFallLegacyPrev = false;
     }
 
     /** Packet thread: an attack belongs to the client tick whose flying packet comes next. */
