@@ -4,7 +4,7 @@ A recreation of Hypixel **SkyWars** and **Bed Wars** as they were in summer 2020
 
 - **Lightweight.** About 140 MB on disk after building, and about 1.6 GB of RAM and 1.2 CPU cores with around 80 bots online, you are able to host it locally.
 - **20 maps from 2020** for SkyWars and Bed Wars are included. The real Hypixel lobby is not.
-- **Made in about 1–2 hours with Claude.** The anticheat may not be fully accurate, so fix it yourself or somehow source the "accurate" one a billionaire is making.
+- **Made in about 1–2 hours with Claude.** The anticheat may not be fully accurate, so fix it yourself or somehow source the "accurate" one billionaire is making.
 
 ## Features
 
