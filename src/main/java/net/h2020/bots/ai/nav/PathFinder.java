@@ -52,11 +52,12 @@ public final class PathFinder {
     public Status status() { return status; }
     public Path result() { return result; }
     public int expanded() { return expanded; }
+    public org.bukkit.World world() { return req.world; }
 
     /** One-line summary for debugging failed searches. */
     public String describe() {
-        return String.format("start %d,%d,%d (stand %s) goal %.1f,%.1f,%.1f expanded %d/%d bridge<=%d",
-                req.sx, req.sy, req.sz, best == null ? "?" : String.valueOf(best.stand), req.gx, req.gy, req.gz,
+        return String.format("start %d,%d,%d [%s on %s] (stand %s) goal %.1f,%.1f,%.1f expanded %d/%d bridge<=%d",
+                req.sx, req.sy, req.sz, wv.type(req.sx, req.sy, req.sz), wv.type(req.sx, req.sy - 1, req.sz), best == null ? "?" : String.valueOf(best.stand), req.gx, req.gy, req.gz,
                 expanded, req.maxNodes, req.maxBridgeBlocks);
     }
 
@@ -115,7 +116,8 @@ public final class PathFinder {
 
             // same level (or slab step)
             double s = wv.stand(nx, y, nz);
-            if (!Double.isNaN(s) && s - n.stand <= 0.6 && s - n.stand >= -0.6) {
+            if (!Double.isNaN(s) && s - n.stand <= 0.6 && s - n.stand >= -0.6
+                    && (!fix(NavStats.FIX_HEADROOM) || s - n.stand <= 0.01 || headroom(n, dx, dz, diag, s, false))) {
                 byte fs = wv.shape(nx, y, nz);
                 double c = base * (fs == Shape.WATER ? 2.6 : 1.0);
                 // the bot floats (holds jump) instead of walking the bottom: prefer routes along the surface
@@ -126,11 +128,22 @@ public final class PathFinder {
             }
             // one up: slab step or jump
             double s1 = wv.stand(nx, y + 1, nz);
-            if (!Double.isNaN(s1) && s1 - n.stand <= 1.25 && s1 - n.stand > 0.0 && wv.passable(x, y + 2, z)) {
+            // swimming at the surface, pushing into the bank gives vanilla's 0.3 "jump out of water" boost: that
+            // clears a bank up to ~1.6 above the water cell (a pool rimmed with a slab on top of the edge block),
+            // not just the 1.25 of a jump from the ground
+            double maxUp = fix(NavStats.FIX_WATER) && here == Shape.WATER && wv.shape(x, y + 1, z) != Shape.WATER ? 1.6 : 1.25;
+            if (!Double.isNaN(s1) && s1 - n.stand <= maxUp && s1 - n.stand > 0.0 && wv.passable(x, y + 2, z)) {
                 if (!diag || (wv.passable(x + dx, y + 2, z) && wv.passable(x, y + 2, z + dz))) {
                     boolean step = s1 - n.stand <= 0.6;
-                    link(n, nx, y + 1, nz, s1, step ? MoveType.WALK : MoveType.JUMP_UP, base + (step ? 0.1 : 0.9), false, -1);
-                    continue;
+                    // a stair entered from its low side is two 0.5 steps: walked, not jumped (players never jump stairs)
+                    if (!step && !diag && fix(NavStats.FIX_STAIRS) && wv.shape(nx, y, nz) == Shape.FULL && Math.abs(s1 - (y + 1)) < 0.01) {
+                        double et = wv.entryTop(nx, y, nz, dx, dz);
+                        if (!Double.isNaN(et) && et > 0.05 && y + et - n.stand <= 0.6 && 1.0 - et <= 0.6) step = true;
+                    }
+                    if (!fix(NavStats.FIX_HEADROOM) || headroom(n, dx, dz, diag, s1, !step)) {
+                        link(n, nx, y + 1, nz, s1, step ? MoveType.WALK : MoveType.JUMP_UP, base + (step ? 0.1 : 0.9), false, -1);
+                        continue;
+                    }
                 }
             }
             boolean openCol = wv.passable(nx, y, nz) && wv.passable(nx, y + 1, nz);
@@ -215,6 +228,23 @@ public final class PathFinder {
             PathNode p = link(n, x, y + 1, z, y + 1, MoveType.PILLAR, 4.0, true, -1);
             if (p != null) p.blocksUsed = Math.max(p.blocksUsed, n.blocksUsed + 1);
         }
+    }
+
+    private static boolean fix(int bit) { return (NavStats.fix & bit) != 0; }
+
+    /**
+     * Rising from n to a floor at height `to` needs the head to clear to+1.8 above the take-off column (and, on a
+     * diagonal, above both corner columns): the vanilla step-up lifts the box in place before moving it, and a jump
+     * bonks on anything lower. From a slab/soul sand/chest floor that can reach one cell higher than the plain y+2
+     * check covers.
+     */
+    private boolean headroom(PathNode n, int dx, int dz, boolean diag, double to, boolean jump) {
+        int need = (int) Math.floor(to + 1.8 + (jump ? 0.15 : 0.0) - 1e-3);
+        for (int k = (int) Math.floor(n.stand + 1.8 - 1e-3) + 1; k <= need; k++) {
+            if (!wv.passable(n.x, k, n.z)) return false;
+            if (diag && (!wv.passable(n.x + dx, k, n.z) || !wv.passable(n.x, k, n.z + dz))) return false;
+        }
+        return true;
     }
 
     private boolean climbBacking(int x, int y, int z) {

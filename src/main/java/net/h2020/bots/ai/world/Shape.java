@@ -44,6 +44,23 @@ public final class Shape {
         return s == FULL || s == HIGH || s == LOW || s == TALL || s == THIN || s == CACTUS || s == UNKNOWN;
     }
 
+    /**
+     * Generic solids whose walkability can be read from their real collision boxes. Everything with behaviour beyond
+     * its shape keeps the table: liquids, ladders, webs, cactus, trapdoors (open ones are hatches) and gates.
+     */
+    public static boolean fromBoxes(byte s, Material m) {
+        if (s != FULL && s != HIGH && s != LOW && s != THIN && s != TALL) return false;
+        switch (m) {
+            case TRAP_DOOR: case IRON_TRAPDOOR: case FENCE_GATE: case SPRUCE_FENCE_GATE: case BIRCH_FENCE_GATE:
+            case JUNGLE_FENCE_GATE: case DARK_OAK_FENCE_GATE: case ACACIA_FENCE_GATE:
+            case WOODEN_DOOR: case IRON_DOOR_BLOCK: case SPRUCE_DOOR: case BIRCH_DOOR: case JUNGLE_DOOR: case ACACIA_DOOR:
+            case DARK_OAK_DOOR: case CACTUS: case BED_BLOCK:
+                return false;
+            default:
+                return true;
+        }
+    }
+
     public static double topHeight(Material m, int data) {
         switch (m) {
             case CHEST: case TRAPPED_CHEST: case ENDER_CHEST: case SOUL_SAND: return 0.875;

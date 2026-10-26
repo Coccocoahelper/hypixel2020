@@ -54,8 +54,68 @@ public final class WorldView {
         Block b = world.getBlockAt(x, y, z);
         Material m = b.getType();
         int data = b.getData();
-        outShape[0] = Shape.classify(m, data);
+        byte s = Shape.classify(m, data);
+        outShape[0] = s;
         outHeight[0] = (float) Shape.topHeight(m, data);
+        if ((net.h2020.bots.ai.nav.NavStats.fix & net.h2020.bots.ai.nav.NavStats.FIX_BOXES) != 0
+                && Shape.fromBoxes(s, m) && !m.isOccluding()) boxShape(x, y, z, outShape, outHeight);
+    }
+
+    // ------------------------------------------------------------------ exact collision boxes
+
+    private net.minecraft.server.v1_8_R3.World nms;
+    private final java.util.List<net.minecraft.server.v1_8_R3.AxisAlignedBB> boxes = new java.util.ArrayList<>();
+
+    /** The real (NMS) collision boxes of one block, the same ones the bot physics collides with. */
+    private java.util.List<net.minecraft.server.v1_8_R3.AxisAlignedBB> boxes(int x, int y, int z) {
+        if (nms == null) nms = ((org.bukkit.craftbukkit.v1_8_R3.CraftWorld) world).getHandle();
+        boxes.clear();
+        net.minecraft.server.v1_8_R3.BlockPosition bp = new net.minecraft.server.v1_8_R3.BlockPosition(x, y, z);
+        net.minecraft.server.v1_8_R3.IBlockData st = nms.getType(bp);
+        st.getBlock().a(nms, bp, st, new net.minecraft.server.v1_8_R3.AxisAlignedBB(x, y, z, x + 1, y + 2, z + 1), boxes, null);
+        return boxes;
+    }
+
+    /**
+     * Classify a non-cube solid from its real collision boxes instead of the material table: snow layers (layers-1)/8,
+     * farmland (a full cube in 1.8), flower pots/skulls (low), panes/iron bars (standable top), stairs and slabs in all
+     * orientations, brewing stands, hoppers... What matters for walking is the top under a body centred in the cell
+     * (x/z 0.2..0.8) and whether anything taller stands at the cell's edges.
+     */
+    private void boxShape(int x, int y, int z, byte[] outShape, float[] outHeight) {
+        java.util.List<net.minecraft.server.v1_8_R3.AxisAlignedBB> list;
+        try { list = boxes(x, y, z); } catch (Throwable t) { return; }
+        if (list.isEmpty()) { outShape[0] = Shape.OPEN; outHeight[0] = 0f; return; }
+        double all = 0, centre = 0;
+        for (net.minecraft.server.v1_8_R3.AxisAlignedBB bb : list) {
+            double top = bb.e - y;
+            all = Math.max(all, top);
+            if (bb.d > x + 0.2 && bb.a < x + 0.8 && bb.f > z + 0.2 && bb.c < z + 0.8) centre = Math.max(centre, top);
+        }
+        if (all > 1.01) { outShape[0] = Shape.TALL; outHeight[0] = 1.5f; }
+        else if (all >= 0.99) { outShape[0] = centre >= 0.99 ? Shape.FULL : Shape.THIN; outHeight[0] = 1f; }
+        else if (all > 0.6) { outShape[0] = Shape.HIGH; outHeight[0] = (float) all; }
+        else { outShape[0] = Shape.LOW; outHeight[0] = (float) all; }
+    }
+
+    /**
+     * Top (relative to the cell) of the half of a solid cell that a body walking in along (dx,dz) reaches first,
+     * across the body's width. A stair entered from its low side is 0.5 there: two 0.5 steps, no jump needed.
+     * NaN when unknown.
+     */
+    public double entryTop(int x, int y, int z, int dx, int dz) {
+        if (y < 0 || y > 255 || !loaded(x, z)) return Double.NaN;
+        java.util.List<net.minecraft.server.v1_8_R3.AxisAlignedBB> list;
+        try { list = boxes(x, y, z); } catch (Throwable t) { return Double.NaN; }
+        // near half: entering moving +x means x in [0, 0.5), etc.; lateral extent: the body's 0.6 width at the centre
+        double x0 = x, x1 = x + 1, z0 = z, z1 = z + 1;
+        if (dx > 0) x1 = x + 0.5; else if (dx < 0) x0 = x + 0.5; else { x0 = x + 0.2; x1 = x + 0.8; }
+        if (dz > 0) z1 = z + 0.5; else if (dz < 0) z0 = z + 0.5; else { z0 = z + 0.2; z1 = z + 0.8; }
+        double top = 0;
+        for (net.minecraft.server.v1_8_R3.AxisAlignedBB bb : list) {
+            if (bb.d > x0 && bb.a < x1 && bb.f > z0 && bb.c < z1) top = Math.max(top, bb.e - y);
+        }
+        return top;
     }
 
     private final byte[] tmpS = new byte[1];

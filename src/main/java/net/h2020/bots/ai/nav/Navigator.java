@@ -166,6 +166,10 @@ public final class Navigator {
             if (land != Integer.MIN_VALUE) y = land;
         }
         if (wv.standable(x, y, z)) return new int[]{x, y, z};
+        // feet sunk into a partial block's cell (the low half of a stair, soul sand, a chest or enchanting table top
+        // 0.75-0.875 up): the node we stand on is the cell above it
+        if ((NavStats.fix & NavStats.FIX_START) != 0 && !wv.passable(x, y, z) && wv.standable(x, y + 1, z)
+                && wv.stand(x, y + 1, z) - p.getY() <= 0.6) return new int[]{x, y + 1, z};
         // centre overhangs an edge: use the block the hitbox is actually on
         double best = 9;
         int[] res = null;
@@ -280,6 +284,8 @@ public final class Navigator {
         safeToGlance = false;
         if (jumpCooldown > 0) jumpCooldown--;
         if (state == State.IDLE || state == State.ARRIVED || state == State.FAILED) return;
+        NavStats.navTick(ctx.player.getWorld());
+        if (NavStats.trace != null && NavStats.trace.equalsIgnoreCase(ctx.player.getName())) trace();
         pollTicket();
         if (state == State.PLANNING) {
             if (ticket == null && ctx.tick - planTick > (failures > 0 ? 20 : 3)) plan();
@@ -429,7 +435,11 @@ public final class Navigator {
                 // (corners after a step-up), and parkour lands off-centre, so the 0.45 centre radius was often never
                 // hit: the bot then circled the look-ahead point on top until stuck recovery, or (parkour) re-jumped
                 // from the landing because along > 0.22 still held.
-                return ctx.c.onGround() && Math.abs(py - p.y) < 0.7 && py > p.y - 0.3 && d2 < 0.8 * 0.8;
+                if (ctx.c.onGround() && Math.abs(py - p.y) < 0.7 && py > p.y - 0.3 && d2 < 0.8 * 0.8) return true;
+                // came up onto the next cell (a neighbouring stair, the far side of a corner) at the landing level:
+                // that is the step taken; insisting on the node centre left the bot hopping beside it
+                return (NavStats.fix & NavStats.FIX_LOOKAHEAD) != 0 && p.move == MoveType.JUMP_UP && ctx.c.onGround()
+                        && Math.abs(py - p.y) < 0.3 && d2 < 1.5 * 1.5 && ctx.world().standable(floor(px), floor(py + 0.01), floor(pz));
             case LADDER:
                 return d2 < 0.45 * 0.45 && Math.abs(py - p.y) < 0.7;
             case SWIM:
@@ -500,8 +510,9 @@ public final class Navigator {
     private void steerTo(PathPoint p, PathPoint prev, List<PathPoint> pts, double px, double py, double pz) {
         int danger = Math.max(p.danger, prev.danger);
         double look = danger > 0 ? 0.9 : (opts.stroll ? 1.6 : 2.2);
-        double[] t = lookahead(pts, px, pz, look);
+        double[] t = lookahead(pts, px, pz, look, ctx.c.onGround() ? py : prev.y);
         double tx = t[0], tz = t[1];
+        steerX = tx; steerZ = tz;
         double dx = tx - px, dz = tz - pz;
         double len = Math.sqrt(dx * dx + dz * dz);
         if (len > 1e-3 && opts.weave && danger == 0) {
@@ -667,8 +678,9 @@ public final class Navigator {
         return land != Integer.MIN_VALUE;
     }
 
-    private double[] lookahead(List<PathPoint> pts, double px, double pz, double dist) {
+    private double[] lookahead(List<PathPoint> pts, double px, double pz, double dist, double level) {
         PathPoint prev = pts.get(idx - 1), cur = pts.get(idx);
+        boolean levels = (NavStats.fix & NavStats.FIX_LOOKAHEAD) != 0;
         // projection of the bot onto the current segment
         double sx = cur.x - prev.x, sz = cur.z - prev.z;
         double len2 = sx * sx + sz * sz;
@@ -685,6 +697,11 @@ public final class Navigator {
             remain -= seg;
             cx = n.x; cz = n.z;
             if (i + 1 >= pts.size()) return new double[]{cx, cz};
+            // The look-ahead is flat: never carry it past a change of level (a drop into a hole, a jump or a 1-block
+            // stair step). Routes often double back on the other level (drop into the island's stairwell and walk
+            // back underneath, or a turning staircase): the point beyond then lies under/over the bot, which circles
+            // it on the edge instead of taking the step.
+            if (levels && Math.abs(n.y - level) > 0.6) return new double[]{cx, cz};
             PathPoint nn = pts.get(i + 1);
             if (nn.special() && nn.move != MoveType.DROP) return new double[]{cx, cz}; // stop at action take-off
             i++;
@@ -713,6 +730,22 @@ public final class Navigator {
         return Math.sqrt(AIMath.hDistSq(px, pz, cx, cz));
     }
 
+    /** Last steering (look-ahead) point, for the trace/stuck log. */
+    private double steerX, steerZ;
+
+    private void trace() {
+        Location p = ctx.pos();
+        Vector v = ctx.c.velocity();
+        String wp = "-";
+        if (path != null && idx < path.size()) {
+            PathPoint a = path.points.get(idx);
+            wp = String.format("%s#%d/%d %.1f,%.2f,%.1f", a.move, idx, path.size(), a.x, a.y, a.z);
+        }
+        org.bukkit.Bukkit.getLogger().info(String.format("[navtrace] %s t=%d %s pos=%.2f,%.3f,%.2f v=%.2f,%.2f,%.2f g=%s colH=%s gui=%s wp=%s steer=%.2f,%.2f stuck=%d",
+                ctx.player.getName(), ctx.tick, state, p.getX(), p.getY(), p.getZ(), v.getX(), v.getY(), v.getZ(), ctx.c.onGround(),
+                ctx.c.collidedHorizontally(), ctx.c.containerOpen(), wp, steerX, steerZ, stuckLevel));
+    }
+
     /** Staged stuck recovery. Returns true when it took over the keys this tick. */
     private boolean stuckCheck(double px, double py, double pz) {
         if (wiggleTicks > 0) {
@@ -722,6 +755,8 @@ public final class Navigator {
             return true;
         }
         if (stuckRef == null || stuckRef.getWorld() != ctx.player.getWorld()) { stuckRef = ctx.pos(); stuckRefTick = ctx.tick; return false; }
+        // a GUI swallows the movement keys: standing still behind an open chest/shop is not being stuck
+        if ((NavStats.fix & NavStats.FIX_GUI) != 0 && ctx.c.containerOpen()) { stuckRef = ctx.pos(); stuckRefTick = ctx.tick; return false; }
         if (ctx.tick - stuckRefTick < 25) return false;
         // hopping in place against a step we cannot take moves the body ~1.2 up and down: only count height we
         // actually hold (on the ground, on a ladder, in water), else such a loop never registers as stuck
@@ -734,6 +769,15 @@ public final class Navigator {
         stuckRefTick = ctx.tick;
         if (moved > 0.6) { stuckLevel = 0; return false; }
         stuckLevel++;
+        if (stuckLevel == 2 && path != null && idx < path.size()) {
+            PathPoint sp = path.points.get(idx);
+            PathPoint pp = path.points.get(idx - 1);
+            Vector v = ctx.c.velocity();
+            NavStats.stuck(ctx.player.getName(), ctx.pos(), sp.x - px, sp.z - pz, sp.move + "#" + idx + "/" + path.size()
+                    + String.format(" [%.1f,%.2f,%.1f -> %.1f,%.2f,%.1f] ground=%s colH=%s gui=%s steer=%.1f,%.1f v=%.2f,%.2f,%.2f",
+                    pp.x, pp.y, pp.z, sp.x, sp.y, sp.z, ctx.c.onGround(), ctx.c.collidedHorizontally(), ctx.c.containerOpen(),
+                    steerX, steerZ, v.getX(), v.getY(), v.getZ()), ctx.world());
+        }
         if (stuckLevel == 1) { ctx.motor.jump(true); return false; }
         if (stuckLevel == 2) { wiggleTicks = 8; wiggleStrafe = ctx.rng.nextBoolean() ? 1 : -1; return true; }
         if (stuckLevel >= 3 && path != null && idx < path.size()) {
@@ -756,10 +800,10 @@ public final class Navigator {
     }
 
     /** -Dh2020.navdebug=true logs every navigation failure (start, goal, reason) to the console. */
-    private static final boolean DEBUG = Boolean.getBoolean("h2020.navdebug");
-
     private void fail(String why) {
-        if (DEBUG) {
+        if ("stuck".equals(why)) NavStats.stuckFail(ctx.player.getWorld());
+        else if (why.startsWith("no path")) NavStats.noPath(ctx.player.getWorld());
+        if (NavStats.debug) {
             Location p = ctx.pos();
             org.bukkit.Bukkit.getLogger().info(String.format("[navdebug] %s fail(%s) at %.1f,%.1f,%.1f goal %s r=%.1f bridge=%s blocks=%d",
                     ctx.player.getName(), why, p.getX(), p.getY(), p.getZ(),

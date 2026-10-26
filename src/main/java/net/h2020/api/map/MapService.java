@@ -15,4 +15,6 @@ public interface MapService {
     /** The main lobby world and the per-family lobby worlds (generated Hypixel-style hubs). */
     World mainLobby();
     World familyLobby(GameFamily family);
+    /** Template an instance world was created from (null if not an instance). */
+    MapTemplate templateOf(World w);
 }

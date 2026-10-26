@@ -366,7 +366,7 @@ public final class MapServiceImpl implements MapService {
         return w != null ? w : mainLobby();
     }
 
-    /** Template an instance world was created from (null if not an instance). */
+    @Override
     public MapTemplate templateOf(World w) {
         return w == null ? null : instances.get(w.getName().toLowerCase());
     }

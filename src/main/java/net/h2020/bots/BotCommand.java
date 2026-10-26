@@ -48,6 +48,25 @@ final class BotCommand implements CommandExecutor, TabCompleter {
                 case "list": list(sender); break;
                 case "cheat": cheat(sender, args); break;
                 case "look": look(sender, args); break;
+                case "navstats":
+                    if (args.length > 1 && args[1].equalsIgnoreCase("reset")) { net.h2020.bots.ai.nav.NavStats.reset(); sender.sendMessage(P + "navstats reset"); }
+                    for (String l : net.h2020.bots.ai.nav.NavStats.report()) sender.sendMessage(l);
+                    break;
+                case "navtrace":
+                    net.h2020.bots.ai.nav.NavStats.trace = args.length > 1 && !args[1].equalsIgnoreCase("off") ? args[1] : null;
+                    sender.sendMessage(P + "navtrace " + net.h2020.bots.ai.nav.NavStats.trace);
+                    break;
+                case "navfix":
+                    if (args.length > 1) {
+                        try { net.h2020.bots.ai.nav.NavStats.fix = Integer.decode(args[1]); }
+                        catch (NumberFormatException e) { throw new IllegalArgumentException("navfix <mask>: 1 start, 2 headroom, 4 boxes, 8 stairs, 16 gui, 32 lookahead, 64 water"); }
+                    }
+                    sender.sendMessage(P + "navfix mask " + net.h2020.bots.ai.nav.NavStats.fix);
+                    break;
+                case "navdebug":
+                    net.h2020.bots.ai.nav.NavStats.debug = args.length > 1 ? args[1].equalsIgnoreCase("on") : !net.h2020.bots.ai.nav.NavStats.debug;
+                    sender.sendMessage(P + "navdebug " + (net.h2020.bots.ai.nav.NavStats.debug ? "on" : "off"));
+                    break;
                 case "tp": tp(sender, args); break;
                 case "goto": goTo(sender, args); break;
                 case "say": say(sender, args); break;
@@ -94,6 +113,7 @@ final class BotCommand implements CommandExecutor, TabCompleter {
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " list" + ChatColor.GRAY + " - online bots");
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " cheat <name|all> <" + cheatNames() + ">");
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " look <name>" + ChatColor.GRAY + " - aim/physics debug");
+        s.sendMessage(P + ChatColor.YELLOW + "/" + label + " navstats [reset] | navdebug [on|off]" + ChatColor.GRAY + " - stuck/path-failure counters per map");
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " tp <name|all> [player]" + ChatColor.GRAY + " - bring bot(s)");
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " goto <name>" + ChatColor.GRAY + " - teleport to bot");
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " say <name> <message>");

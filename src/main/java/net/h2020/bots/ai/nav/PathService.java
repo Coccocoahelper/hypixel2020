@@ -31,7 +31,6 @@ public final class PathService {
     /** Slice per search before rotating to the next one. */
     private static final long SLICE = 300_000L;
 
-    private static final boolean DEBUG = Boolean.getBoolean("h2020.navdebug");
 
     private PathService() {}
 
@@ -62,7 +61,7 @@ public final class PathService {
                 s = t.finder.step(Math.min(end, now + SLICE));
                 t.spentNanos += System.nanoTime() - now;
             } catch (Throwable ex) {
-                if (DEBUG) org.bukkit.Bukkit.getLogger().log(java.util.logging.Level.WARNING, "[navdebug] path search crashed", ex);
+                if (NavStats.debug) org.bukkit.Bukkit.getLogger().log(java.util.logging.Level.WARNING, "[navdebug] path search crashed", ex);
                 t.path = null; t.done = true;
                 continue;
             }
@@ -71,8 +70,9 @@ public final class PathService {
             } else {
                 t.path = t.finder.result();
                 t.done = true;
-                if (DEBUG && t.path == null) org.bukkit.Bukkit.getLogger().info("[navdebug] search failed: " + t.finder.describe());
-                if (DEBUG && tick - t.createdTick > 40) org.bukkit.Bukkit.getLogger().info("[navdebug] slow search " + (tick - t.createdTick)
+                if (t.path == null) NavStats.searchFailed(t.finder.world());
+                if (NavStats.debug && t.path == null) org.bukkit.Bukkit.getLogger().info("[navdebug] search failed: " + t.finder.describe());
+                if (NavStats.debug && tick - t.createdTick > 40) org.bukkit.Bukkit.getLogger().info("[navdebug] slow search " + (tick - t.createdTick)
                         + " ticks (queue " + QUEUE.size() + ", " + t.spentNanos / 1000 / Math.max(1, t.finder.expanded()) + "us/node) " + s + " " + t.finder.describe());
             }
         }
