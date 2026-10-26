@@ -1,0 +1,14 @@
+.gradle/
+build/
+.tools/
+run/
+*.iml
+.idea/
+.claude/
+import/
+logs/
+*.log
+*.log.gz
+__pycache__/
+*.pyc
+session.lock

@@ -1,0 +1,8 @@
+# Copied to run/spigot.yml on first start. Spigot fills in every setting not listed here with its defaults.
+settings:
+  restart-on-crash: false
+world-settings:
+  default:
+    # Hypixel shows players much further than vanilla Spigot's 48 blocks (SkyWars islands, Bed Wars bases).
+    entity-tracking-range:
+      players: 128

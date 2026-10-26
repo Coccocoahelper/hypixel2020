@@ -1,0 +1,31 @@
+name: Hypixel2020
+version: 1.0.0
+main: net.h2020.H2020Plugin
+author: h2020
+description: Private Hypixel 2020 recreation (Bed Wars, SkyWars, Watchdog, human-like bots)
+load: POSTWORLD
+commands:
+  play:
+    description: Join a game, e.g. /play bedwars_eight_one
+    usage: /play <game>
+  lobby:
+    description: Return to lobby
+    aliases: [l, hub]
+  h2020:
+    description: Admin/video tools (bots, games, watchdog)
+    permission: h2020.admin
+  bot:
+    description: Bot tools (spawn, cheat profiles, list) - owned by bots module
+    permission: h2020.admin
+  wd:
+    description: Watchdog staff tools (alerts, vl, ban) - owned by watchdog module
+    permission: h2020.admin
+  report:
+    description: Report a player
+    aliases: [wdr, watchdogreport]
+  shout:
+    description: Bed Wars shout chat
+permissions:
+  h2020.admin:
+    description: Admin and video tools
+    default: op

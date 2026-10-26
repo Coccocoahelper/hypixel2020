@@ -1,0 +1,72 @@
+# Core owns this file; modules add their own sections (core:, maps:, watchdog:, bots:, bedwars:, skywars:).
+# Other modules keep their defaults in code and only read optional overrides from their own section.
+
+core:
+  # Date shown on every scoreboard: MM/dd/yy, or "today" for the real date. In-game: /h2020 date 07/14/20 | today | 2020
+  date: "07/14/20"
+
+  # Rank given to real players the first time they join (NONE, VIP, VIP_PLUS, MVP, MVP_PLUS, MVP_PLUS_PLUS, YOUTUBE, ADMIN)
+  default-rank: MVP_PLUS
+  default-plus-color: RED
+  # Network level for new real players
+  default-level: 87
+
+  tab:
+    header: "&bYou are playing on &e&lMC.HYPIXEL.NET"
+    footer: "&bRanks, Boosters & MORE! &c&lSTORE.HYPIXEL.NET"
+
+  # Colour codes use &. Lobby instance number shown on the main lobby scoreboard ("Lobby: #3") and how many lobbies the selector lists.
+  lobby-number: 3
+  lobby-count: 12
+
+  # Idle bots spawned in each lobby (main, Bed Wars, SkyWars) on enable. The bots-ai module gives them brains.
+  lobby-bots: 15
+
+  # Show Hypixel-sized player counts (e.g. "41,233 Players") instead of the real ones on NPCs, menus and scoreboards.
+  fake-player-counts: false
+
+  # Bot-only games that run in the background so the network feels alive (0 = off).
+  background-games: 0
+  background-types: [bedwars_eight_one, bedwars_eight_two, solo_normal, solo_insane]
+
+  bot-fill:
+    enabled: true
+    # A waiting game fills in a random time between these bounds (seconds), divided by speed.
+    min-seconds: 20
+    max-seconds: 60
+    speed: 1.0
+    # Percentage of queue-filler bots that spawn with a cheat profile (0-100).
+    cheater-percent: 0
+    cheat-types: [KILLAURA, REACH, AUTOCLICKER, FLY, SPEED, SCAFFOLD, VELOCITY, NOFALL, FASTPLACE]
+
+  # What bots do when their game ends: requeue into the same mode, go to the lobby, or disconnect (the rest).
+  bot-churn:
+    requeue-chance: 0.55
+    lobby-chance: 0.25
+    # Chance that a bot leaves the game early after its final death / elimination.
+    leave-after-elimination: 0.7
+
+  # Game-mode NPCs. Positions are saved here by /h2020 npc <id> (stand where it should be).
+  # Skin usernames are fetched from Mojang at startup (empty = borrow a random bot skin).
+  npc-skins:
+    bedwars: ""
+    skywars: ""
+  npc-positions: {}
+
+  # Players joining from this machine (localhost) are made op automatically, so you can use /h2020 right away.
+  op-local-players: true
+
+watchdog:
+  # "[WD] Name failed ..." chat alerts for admins. Off by default; /wd alerts toggles them for yourself.
+  staff-alerts: false
+  # The same alerts in the server console. Every flag is always written to plugins/Hypixel2020/watchdog.log.
+  console-alerts: false
+  # Reach limit for ops/admins (0 = vanilla 3.0 like everyone). Lets the owner film long-reach Kill Aura hits.
+  admin-reach-limit: 0
+  movement:
+    # Reproduce Hypixel's 2020 Watchdog blind spot for the "1/64 hover" fly (Y alternating +-1/16, ~2.15x sprint).
+    legacy-2020-hover-gap: false
+    # Reproduce its NCP-style bunnyhop allowance (jump up to 2.15x sprint, air ticks lose only 1/160 per tick).
+    legacy-2020-bhop-gap: false
+    # Hypixel 2020 had no working anti-knockback check: 0/0 velocity went unpunished.
+    legacy-2020-velocity-gap: false
