@@ -44,6 +44,8 @@ public final class PlayerData {
     public double lastGroundY, maxYSinceGround;
     public int airTicks;
     public double deltaXZ, prevDeltaXZ, deltaY;
+    /** 2020 packet-crit burst detector (legacy-2020-crits-gap), fed with every flying packet. */
+    public final LegacyCritBurst critBurst = new LegacyCritBurst();
 
     // ---- per client tick counters (reset after each flying packet) ----
     public long flyingCount;
@@ -91,6 +93,7 @@ public final class PlayerData {
                   boolean ground, long now) {
         flyingCount++;
         lastFlyingMs = now;
+        critBurst.onFlying(hasPos, px, py, pz, ground, now);
         prevOnGround = onGround;
         onGround = ground;
         if (hasLook) {
@@ -142,6 +145,7 @@ public final class PlayerData {
         lastTeleportMs = now;
         skipRotationSamples = 3;
         hasPosition = false;
+        critBurst.reset();
     }
 
     /**

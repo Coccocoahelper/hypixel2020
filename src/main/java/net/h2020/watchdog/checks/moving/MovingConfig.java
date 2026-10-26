@@ -41,6 +41,15 @@ final class MovingConfig {
      * Off by default.
      */
     boolean legacyNoFallGap;
+    /**
+     * watchdog.movement.legacy-2020-crits-gap: Hypixel's 2020 Watchdog let "packet criticals" through - 2-3 extra
+     * position packets on the spot (a rise of <= 0.0625 above the ground packet, then a drop, onGround=false) sent
+     * right before a C02 attack. When on, such a burst (net.h2020.watchdog.framework.LegacyCritBurst), once its attack
+     * arrives, is left out of SurvivalFly/NoFall/Velocity/Passable and of Timer/FlyingFrequency/MorePackets/PacketOrder,
+     * so vanilla grants the crit and nothing flags; FIGHT_CRITICAL reads the same key (WatchdogConfig). Bursts without
+     * the attack, off-spot or higher offsets, and every other packet stay fully checked. Off by default.
+     */
+    boolean legacyCritsGap;
 
     MovingConfig() {
         for (CheckType t : CheckType.values()) {
@@ -58,6 +67,7 @@ final class MovingConfig {
                 c.legacyBhopGap = m.getBoolean("legacy-2020-bhop-gap", false);
                 c.legacyVelocityGap = m.getBoolean("legacy-2020-velocity-gap", false);
                 c.legacyNoFallGap = m.getBoolean("legacy-2020-nofall-gap", false);
+                c.legacyCritsGap = m.getBoolean("legacy-2020-crits-gap", false);
                 for (CheckType t : CheckType.values()) {
                     if (t.group != CheckType.Group.MOVING && t.group != CheckType.Group.NET) continue;
                     String key = t.name().toLowerCase(Locale.ROOT);

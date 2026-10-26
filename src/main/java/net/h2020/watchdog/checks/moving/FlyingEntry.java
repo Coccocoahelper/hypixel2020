@@ -17,6 +17,11 @@ final class FlyingEntry {
     final boolean ignored;
     /** The C06 that confirms a pending server teleport. */
     final boolean confirm;
+    /**
+     * Part of a 2020 packet-crit burst whose attack arrived (legacy-2020-crits-gap, set on the packet thread): the
+     * physics chain skips it (MoveProcessor.legacyCritSkip).
+     */
+    volatile boolean critOffset;
 
     FlyingEntry(long seq, long time, double x, double y, double z, float yaw, float pitch, boolean ground,
                 boolean hasPos, boolean hasLook, boolean ignored, boolean confirm) {

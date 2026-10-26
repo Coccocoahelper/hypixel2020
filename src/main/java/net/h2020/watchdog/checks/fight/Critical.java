@@ -33,6 +33,11 @@ public final class Critical extends Check {
         fd.critAir = d.airTicks;
         fd.critSuspect = d.hasPosition && !d.onGround && ascent < MIN_ASCENT && aboveGround > -0.005 && d.airTicks <= 12
                 && now - d.lastVelocityMs > 1200 && now - d.lastTeleportMs > 1500;
+        // 2020 blind spot (watchdog.movement.legacy-2020-crits-gap): the classic packet-crit burst right before this
+        // attack (see LegacyCritBurst) is accepted. Always consumed, so a burst never carries over to a later attack.
+        int burst = d.critBurst.onAttack(now);
+        fd.critLegacy = burst > 0 && service.config().legacyCritsGap;
+        if (fd.critLegacy) fd.critSuspect = false;
     }
 
     /** Main thread, damage event. @return cancel */
@@ -47,6 +52,7 @@ public final class Critical extends Check {
         if (Util.inSpecialMedium(attacker)) return false;
         String det = "ascent=" + String.format(java.util.Locale.ROOT, "%.4f", fd.critAscent) + " air=" + fd.critAir
                 + " fd=" + Util.fmt(h.fallDistance);
+        if (fd.critLegacy) det += " legacy-2020-burst";
         if (fd.critSuspect) {
             fd.criticalBuffer += 1;
             if (fd.criticalBuffer >= 2) return flag(attacker, 2.0, det);

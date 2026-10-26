@@ -40,6 +40,8 @@ public final class FightData {
     public int critTarget = -1, critAir;
     public double critAscent;
     public boolean critSuspect;
+    /** The sampled attack followed a 2020 packet-crit burst accepted by legacy-2020-crits-gap. */
+    public boolean critLegacy;
     /** Entity id of the most recent C02 attack target. */
     public int lastTarget = -1;
 

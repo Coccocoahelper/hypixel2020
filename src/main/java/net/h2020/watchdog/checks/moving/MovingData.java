@@ -1,5 +1,6 @@
 package net.h2020.watchdog.checks.moving;
 
+import net.h2020.watchdog.framework.LegacyCritBurst;
 import net.h2020.watchdog.checks.net.NetData;
 import org.bukkit.Location;
 
@@ -40,6 +41,11 @@ final class MovingData {
     double mpLast = -1;
     double mpLastPacket = -1;
     double mpLastFlag = -1e12;
+    // legacy-2020-crits-gap, packet thread: candidate burst packets whose rate-check accounting waits for the attack
+    final LegacyCritBurst critBurst = new LegacyCritBurst();
+    final FlyingEntry[] critEntries = new FlyingEntry[LegacyCritBurst.MAX_PACKETS];
+    final double[] critClock = new double[LegacyCritBurst.MAX_PACKETS];
+    int critCount;
 
     // ------------------------------------------------------------------ main thread
     /** inSeq snapshot taken by the previous tick task: entries up to it were processed by the server. */

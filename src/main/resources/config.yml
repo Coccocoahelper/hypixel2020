@@ -85,3 +85,7 @@ watchdog:
     # Hypixel 2020 let the classic "Hypixel" NoFall through: one onGround=true each time ~2.5-3 blocks were fallen
     # resets the fall distance before it can damage. Constant onGround spoofs and denied landings stay caught.
     legacy-2020-nofall-gap: false
+    # Hypixel 2020 let "packet criticals" through: 2-3 extra position packets on the spot (a rise of <= 0.0625, then
+    # a drop, onGround=false) right before the attack make vanilla crit. Only that burst, followed by its attack, is
+    # accepted (Critical, SurvivalFly, NoFall, Timer, FlyingFrequency, MorePackets, PacketOrder); anything else is checked.
+    legacy-2020-crits-gap: false

@@ -60,14 +60,33 @@ final class MovingPacketListener implements PacketHub.Listener {
                 d.queueSize.decrementAndGet();
             }
             double clock = PacketClock.now(d.net);
-            eng.net.onFlying(p, d.net, clock, confirm);
-            if (eng.config.enabled(CheckType.MOVING_MOREPACKETS)) MorePackets.onFlying(eng, p, d, clock, confirm);
+            if (eng.config.legacyCritsGap) {
+                boolean candidate;
+                if (confirm || ignored) {
+                    d.critBurst.reset();
+                    candidate = false;
+                } else {
+                    candidate = d.critBurst.onFlying(hasPos, f.a(), f.b(), f.c(), f.f(), now);
+                }
+                if (candidate && d.critCount < d.critEntries.length) {
+                    // Possible 2020 packet-crit burst: count it for the rate checks only if no attack follows.
+                    d.critEntries[d.critCount] = e;
+                    d.critClock[d.critCount] = clock;
+                    d.critCount++;
+                    return true;
+                }
+                replayCritBurst(p, d);
+            }
+            rateChecks(p, d, clock, confirm);
             return true;
         }
         if (packet instanceof PacketPlayInAbilities) {
             if (((PacketPlayInAbilities) packet).isFlying()) d.lastClientFlyClaim = System.currentTimeMillis();
         } else if (packet instanceof PacketPlayInUseEntity) {
-            if (((PacketPlayInUseEntity) packet).a() == PacketPlayInUseEntity.EnumEntityUseAction.ATTACK) d.recordAttack();
+            if (((PacketPlayInUseEntity) packet).a() == PacketPlayInUseEntity.EnumEntityUseAction.ATTACK) {
+                d.recordAttack();
+                if (eng.config.legacyCritsGap) onCritAttack(p, d);
+            }
         }
         // Keep-alive replies may arrive on a different thread than the rest of the stream (bots answer them on a
         // timer thread, like vanilla's network thread). They do not use the clock, and selecting it here would flip
@@ -75,6 +94,38 @@ final class MovingPacketListener implements PacketHub.Listener {
         double clock = packet instanceof PacketPlayInKeepAlive ? 0.0 : PacketClock.now(d.net);
         eng.net.onInbound(p, d.net, packet, clock);
         return true;
+    }
+
+    private void rateChecks(Player p, MovingData d, double clock, boolean confirm) {
+        eng.net.onFlying(p, d.net, clock, confirm);
+        if (eng.config.enabled(CheckType.MOVING_MOREPACKETS)) MorePackets.onFlying(eng, p, d, clock, confirm);
+    }
+
+    /**
+     * legacy-2020-crits-gap: an attack right after a complete packet-crit burst. Its packets are marked so the
+     * physics chain skips them and are never counted by Timer/FlyingFrequency/MorePackets/PacketOrder (the 2020
+     * Watchdog didn't see them either). An incomplete burst is counted now, in its original order and times.
+     */
+    private void onCritAttack(Player p, MovingData d) {
+        int n = d.critBurst.onAttack(System.currentTimeMillis());
+        if (n > 0 && n == d.critCount) {
+            for (int i = 0; i < n; i++) {
+                d.critEntries[i].critOffset = true;
+                d.critEntries[i] = null;
+            }
+            d.critCount = 0;
+        } else {
+            replayCritBurst(p, d);
+        }
+    }
+
+    /** Counts deferred burst candidates that turned out not to be a packet crit, exactly as if never deferred. */
+    private void replayCritBurst(Player p, MovingData d) {
+        for (int i = 0; i < d.critCount; i++) {
+            rateChecks(p, d, d.critClock[i], false);
+            d.critEntries[i] = null;
+        }
+        d.critCount = 0;
     }
 
     @Override

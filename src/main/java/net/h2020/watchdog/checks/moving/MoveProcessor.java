@@ -1,5 +1,6 @@
 package net.h2020.watchdog.checks.moving;
 
+import net.h2020.watchdog.framework.LegacyCritBurst;
 import net.h2020.watchdog.checks.net.PacketClock;
 import net.minecraft.server.v1_8_R3.EntityPlayer;
 import net.minecraft.server.v1_8_R3.GenericAttributes;
@@ -78,6 +79,7 @@ final class MoveProcessor {
             resync(p, h, d, 5);
             return null;
         }
+        if (e.critOffset && legacyCritSkip(w, h, d, e)) return null;
 
         MoveContext c = new MoveContext();
         c.player = p;
@@ -182,6 +184,21 @@ final class MoveProcessor {
             d.setBack = new Location(p.getWorld(), c.toX, c.toY, c.toZ);
         }
         return null;
+    }
+
+    /**
+     * legacy-2020-crits-gap: a packet of a confirmed 2020 packet-crit burst (MovingPacketListener.onCritAttack) is not
+     * a client tick - the client never left the spot - so it is left out of the physics chain entirely: the next real
+     * tick is judged from the ground position before the burst. Re-validated against the main-thread state: the
+     * previous tick claimed ground at exactly this x/z, really stands on the ground, and the offset is <= 0.07.
+     */
+    private static boolean legacyCritSkip(WorldServer w, EntityPlayer h, MovingData d, FlyingEntry e) {
+        if (!e.hasPos || e.ground || !d.prevClientGround) return false;
+        if (e.x != d.x || e.z != d.z) return false;
+        double off = e.y - d.y;
+        if (off < 0.0 || off > LegacyCritBurst.MAX_OFFSET) return false;
+        PosInfo base = Collisions.info(w, h, d.x, d.y, d.z, d.ghosts, e.time);
+        return base.loaded && base.ground && base.liquid == 0 && !base.climbable && !base.web;
     }
 
     /**

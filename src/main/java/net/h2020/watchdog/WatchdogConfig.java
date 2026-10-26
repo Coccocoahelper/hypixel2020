@@ -28,6 +28,13 @@ public final class WatchdogConfig {
      * while bots and other players stay on the vanilla 3.0. 0 = no special limit (default).
      */
     public double adminReachLimit = 0.0;
+    /**
+     * watchdog.movement.legacy-2020-crits-gap: Hypixel's 2020 Watchdog let "packet criticals" through - 2-3 position
+     * packets on the spot (a rise of <= 0.0625 then a drop, onGround=false) sent right before the attack. When on,
+     * FIGHT_CRITICAL accepts exactly that burst (net.h2020.watchdog.framework.LegacyCritBurst); the moving/net side
+     * reads the same key (MovingConfig). Off by default.
+     */
+    public boolean legacyCritsGap = false;
     public int banDelayMinSeconds = 5;
     public int banDelayMaxSeconds = 40;
     /** Chance that a ban of a player in a running game is held back until that game ends. */
@@ -118,6 +125,8 @@ public final class WatchdogConfig {
         c.banHumans = s.getBoolean("ban-humans", c.banHumans);
         c.exemptAdmins = s.getBoolean("exempt-admins", c.exemptAdmins);
         c.adminReachLimit = Math.max(0, s.getDouble("admin-reach-limit", c.adminReachLimit));
+        ConfigurationSection mv = s.getConfigurationSection("movement");
+        if (mv != null) c.legacyCritsGap = mv.getBoolean("legacy-2020-crits-gap", c.legacyCritsGap);
         c.banDelayMinSeconds = Math.max(0, s.getInt("ban-delay-min", c.banDelayMinSeconds));
         c.banDelayMaxSeconds = Math.max(c.banDelayMinSeconds, s.getInt("ban-delay-max", c.banDelayMaxSeconds));
         c.endOfGameBanChance = s.getDouble("end-of-game-ban-chance", c.endOfGameBanChance);
