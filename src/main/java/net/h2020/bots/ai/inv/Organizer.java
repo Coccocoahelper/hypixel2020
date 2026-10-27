@@ -19,9 +19,13 @@ public final class Organizer {
     public Organizer(BotContext ctx) {
         this.ctx = ctx;
         // personal hotbar layout (sword first for everyone; the rest varies)
-        if (ctx.persona.rodder) layout = new Inv.Pred[]{Inv.SWORD, Inv.ROD, Inv.BLOCK, Inv.BOW, Inv.GAPPLE, Inv.PEARL};
-        else if (ctx.rng.nextBoolean()) layout = new Inv.Pred[]{Inv.SWORD, Inv.BLOCK, Inv.BOW, Inv.PEARL, Inv.GAPPLE};
-        else layout = new Inv.Pred[]{Inv.SWORD, Inv.BLOCK, Inv.GAPPLE, Inv.PEARL, Inv.BOW};
+        // (the tail: fight utility kept on the hotbar so it can be used without opening the inventory mid-fight -
+        // throwables, the clutch water bucket, lava, a potion)
+        Inv.Pred water = Inv.type(org.bukkit.Material.WATER_BUCKET), lava = Inv.type(org.bukkit.Material.LAVA_BUCKET);
+        Inv.Pred potion = new Inv.Pred() { public boolean test(org.bukkit.inventory.ItemStack i) { return Items.isPotion(i) && i.getDurability() != 0; } };
+        if (ctx.persona.rodder) layout = new Inv.Pred[]{Inv.SWORD, Inv.ROD, Inv.BLOCK, Inv.BOW, Inv.GAPPLE, Inv.PEARL, Inv.THROWABLE, water, potion};
+        else if (ctx.rng.nextBoolean()) layout = new Inv.Pred[]{Inv.SWORD, Inv.BLOCK, Inv.BOW, Inv.PEARL, Inv.GAPPLE, Inv.THROWABLE, water, lava, potion};
+        else layout = new Inv.Pred[]{Inv.SWORD, Inv.BLOCK, Inv.GAPPLE, Inv.PEARL, Inv.BOW, water, Inv.THROWABLE, lava, potion};
     }
 
     public void reset() { wait = AIMath.range(ctx.rng, 2, 5); clicks = 0; }

@@ -23,12 +23,26 @@ public final class Sighting {
     public boolean ally;
     public double threat;
     public double opportunity;
+    /** Gear as last seen (armour is visible on the body, the weapon in the hand): the best of what we saw. */
+    public double armorSeen, weaponSeen = 1, healthSeen = 20;
+    public boolean bowSeen;
+    public long gearTick = -10000;
+    /** Last time they stood (not bridging) inside their own spawn area / were seen over the void. */
+    public long overVoidTick = -10000;
     /** Raw position on the previous scan (seen or not) for footstep loudness. */
     Location scanPos;
     long scanTick;
     double scanSpeed;
 
     Sighting(Player p) { this.player = p; }
+
+    /**
+     * Rough fighting strength from what we saw: armour points, weapon, health (0..~40). Compare with
+     * {@link Perception#selfPower()}.
+     */
+    public double power() {
+        return armorSeen * 1.1 + (weaponSeen - 1) * 1.6 + healthSeen * 0.6;
+    }
 
     /** Seconds since last direct sight. */
     public double unseenSeconds(long now) { return (now - lastSeenTick) / 20.0; }

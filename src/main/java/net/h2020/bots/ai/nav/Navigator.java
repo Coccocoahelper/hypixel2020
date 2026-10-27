@@ -84,6 +84,10 @@ public final class Navigator {
         return String.valueOf(state);
     }
     public Bridger bridger() { return bridger; }
+
+    /** Lifetime counters for behaviour stats: stuck episodes, failed goals, ticks spent waiting for a route. */
+    public int stuckEpisodes, failuresTotal;
+    public long planningTicks;
     /** Straight, safe stretch: brain may let the gaze look around without endangering the walk. */
     public boolean safeToGlance() { return safeToGlance; }
     public Path path() { return path; }
@@ -138,7 +142,21 @@ public final class Navigator {
         cancelActions();
     }
 
+    /** Ticks to stay crouched after a bridge/pillar was cut short (the body hangs over the edge, moving backwards). */
+    private int settleTicks;
+
+    /**
+     * Call once per tick after the brain ran: right after a bridge or pillar was interrupted (plan change, a fight)
+     * hold sneak for a moment like a player who lets go of the keys at a bridge tip, instead of sliding off it.
+     */
+    public void settle() {
+        if (settleTicks <= 0) return;
+        settleTicks--;
+        if (!actionRunning && ctx.c.onGround()) ctx.motor.sneak(true);
+    }
+
     private void cancelActions() {
+        if (actionRunning && (action == MoveType.BRIDGE || action == MoveType.PILLAR)) settleTicks = 12;
         if (actionRunning) {
             bridger.cancel(); pillarer.cancel(); breaker.cancel();
             actionRunning = false;
@@ -224,8 +242,8 @@ public final class Navigator {
             r.forbidden = f;
         }
         r.maxNodes = opts.maxNodes;
-        r.maxFall = opts.stroll ? 3 : (sk.overall > 0.6 ? 6 : 4);
-        r.maxFallDamage = Math.max(0, Math.min(ctx.health() - 6, opts.stroll ? 0 : 5));
+        r.maxFall = opts.stroll ? 3 : (opts.maxFall >= 0 ? opts.maxFall : (sk.overall > 0.6 ? 6 : 4));
+        r.maxFallDamage = Math.max(0, Math.min(ctx.health() - 6, opts.stroll ? 0 : (opts.maxFallDamage >= 0 ? opts.maxFallDamage : 5)));
         r.heuristicWeight = 1.25 + (1 - sk.overall) * 0.4;
         // bridging makes every block over the void cost several times a walked one, so the plain distance
         // heuristic sends A* through every corner of the island first (12000 nodes, many seconds of queued search
@@ -288,6 +306,7 @@ public final class Navigator {
         if (NavStats.trace != null && NavStats.trace.equalsIgnoreCase(ctx.player.getName())) trace();
         pollTicket();
         if (state == State.PLANNING) {
+            planningTicks++;
             if (ticket == null && ctx.tick - planTick > (failures > 0 ? 20 : 3)) plan();
             beeline();
             return;
@@ -751,7 +770,10 @@ public final class Navigator {
         if (wiggleTicks > 0) {
             wiggleTicks--;
             ctx.motor.move(0.0f, wiggleStrafe);
-            if (wiggleTicks % 4 == 0) ctx.motor.jump(true);
+            Location wp = ctx.pos();
+            // beside the void the wiggle is a crouched shuffle (a strafe-jump there is a fall)
+            if (ctx.world().voidSides(floor(wp.getX()), floor(wp.getY() + 0.01), floor(wp.getZ())) > 0) ctx.motor.sneak(true);
+            else if (wiggleTicks % 4 == 0) ctx.motor.jump(true);
             return true;
         }
         if (stuckRef == null || stuckRef.getWorld() != ctx.player.getWorld()) { stuckRef = ctx.pos(); stuckRefTick = ctx.tick; return false; }
@@ -769,6 +791,7 @@ public final class Navigator {
         stuckRefTick = ctx.tick;
         if (moved > 0.6) { stuckLevel = 0; return false; }
         stuckLevel++;
+        if (stuckLevel == 2) stuckEpisodes++;
         if (stuckLevel == 2 && path != null && idx < path.size()) {
             PathPoint sp = path.points.get(idx);
             PathPoint pp = path.points.get(idx - 1);
@@ -778,7 +801,14 @@ public final class Navigator {
                     pp.x, pp.y, pp.z, sp.x, sp.y, sp.z, ctx.c.onGround(), ctx.c.collidedHorizontally(), ctx.c.containerOpen(),
                     steerX, steerZ, v.getX(), v.getY(), v.getZ()), ctx.world());
         }
-        if (stuckLevel == 1) { ctx.motor.jump(true); return false; }
+        if (stuckLevel == 1) {
+            // (never hop at a bridge takeoff / beside the void: a jump there cancels the crouch's edge guard and is
+            // how bots stepped off the tip of their own bridge when the takeoff spot was a hair out of reach)
+            boolean edge = ctx.world().voidSides(floor(px), floor(py + 0.01), floor(pz)) > 0
+                    || (path != null && idx < path.size() && (path.points.get(idx).move == MoveType.BRIDGE || path.points.get(idx).move == MoveType.PILLAR));
+            if (!edge) ctx.motor.jump(true);
+            return false;
+        }
         if (stuckLevel == 2) { wiggleTicks = 8; wiggleStrafe = ctx.rng.nextBoolean() ? 1 : -1; return true; }
         if (stuckLevel >= 3 && path != null && idx < path.size()) {
             // the same plan keeps walking into this spot: forbid it so the replan finds another way (or breaks through)
@@ -801,6 +831,7 @@ public final class Navigator {
 
     /** -Dh2020.navdebug=true logs every navigation failure (start, goal, reason) to the console. */
     private void fail(String why) {
+        failuresTotal++;
         if ("stuck".equals(why)) NavStats.stuckFail(ctx.player.getWorld());
         else if (why.startsWith("no path")) NavStats.noPath(ctx.player.getWorld());
         if (NavStats.debug) {

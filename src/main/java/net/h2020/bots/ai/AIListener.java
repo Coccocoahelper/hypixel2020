@@ -53,6 +53,8 @@ final class AIListener implements Listener {
         if (vb != null) vb.onHurt(attacker, e.getFinalDamage());
         BaseBrain ab = BotAI.brainOf(attacker);
         if (ab != null) ab.onHitLanded(victim);
+        if (ab != null && ab.context() != null && e.getDamager() instanceof Projectile)
+            ab.context().combat.onProjectileHit(e.getDamager().getType().name().toLowerCase());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -91,7 +93,12 @@ final class AIListener implements Listener {
     public void onEat(PlayerItemConsumeEvent e) { SoundBus.emit(SoundBus.Kind.EAT, e.getPlayer().getLocation(), e.getPlayer()); }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onFlag(WatchdogFlagEvent e) { if (e.player() != null) PlayerStats.flagged(e.player()); }
+    public void onFlag(WatchdogFlagEvent e) {
+        if (e.player() == null) return;
+        PlayerStats.flagged(e.player());
+        BaseBrain b = BotAI.brainOf(e.player());
+        if (b instanceof GameBrain && b.context() != null) b.context().combat.onFlag(e.check().name());
+    }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onKill(GameKillEvent e) {
@@ -99,6 +106,7 @@ final class AIListener implements Listener {
         boolean voided = victim != null && (victim.getLocation().getY() < 2
                 || (victim.getLastDamageCause() != null && victim.getLastDamageCause().getCause() == EntityDamageEvent.DamageCause.VOID));
         BaseBrain vb = BotAI.brainOf(victim);
+        if (vb != null && vb.context() != null) vb.context().combat.onDeath(voided);
         if (vb != null) vb.onDeath(e.killer(), voided);
         BaseBrain kb = BotAI.brainOf(e.killer());
         if (kb != null && e.killer() != victim) kb.onKill(victim, e.finalKill());

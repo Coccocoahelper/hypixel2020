@@ -61,7 +61,9 @@ public abstract class BaseBrain implements BotBrain {
                 flickTicks--;
                 ctx.motor.aimEntity(Motor.P_FLICK, flickTarget, AimIntent.FLICK);
             }
-            think();
+            // (combat package) clutches when knocked off / the calm heal after a fight pre-empt the brain this tick
+            if (!ctx.combat.emergencyTick()) think();
+            ctx.nav.settle();
             // a player in water holds space: swims to the surface and bobs there, high enough that pushing into a
             // bank triggers vanilla's 0.3 "jump out of water" boost. Without it the body sinks (and on the bottom of
             // shallow water a jump press is only +0.04, so it can never hop out).

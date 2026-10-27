@@ -50,6 +50,7 @@ public final class BotAI {
     public static void install(JavaPlugin p) {
         plugin = p;
         FightStats.install(p);
+        net.h2020.bots.ai.combat.CombatStats.install(p);
         ConfigurationSection cfg = p.getConfig() == null ? null : p.getConfig().getConfigurationSection("bots-ai");
         if (cfg != null) {
             PathService.setBudgetMicros(cfg.getLong("path-budget-micros", 4000));

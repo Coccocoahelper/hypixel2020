@@ -90,7 +90,10 @@ public final class Perception {
             if (snd.source == null || !filter.relevant(snd.source)) continue;
             Sighting s = mem.get(snd.source.getUniqueId());
             if (s == null) continue;
-            onNoise(s, new Location(snd.world, snd.x, snd.y, snd.z), snd.kind == SoundBus.Kind.BOW || snd.kind == SoundBus.Kind.HIT ? 0.5 : 0.3);
+            Location at = new Location(snd.world, snd.x, snd.y, snd.z);
+            onNoise(s, at, snd.kind == SoundBus.Kind.BOW || snd.kind == SoundBus.Kind.HIT ? 0.5 : 0.3);
+            // a hit landing somewhere else: two other players are fighting there (third-party material)
+            if (snd.kind == SoundBus.Kind.HIT && at.distanceSquared(ctx.pos()) > 25) noteFight(snd.source, at, now);
         }
         lastSoundTick = SoundBus.now();
         // drop dead/forgotten entries
@@ -144,6 +147,15 @@ public final class Perception {
             if (now >= s.noticeAt) { s.known = true; s.noticeAt = -1; }
         }
         if (s.visible && s.known) {
+            // what they wear is visible; what they hold only while they hold it (remember the best weapon seen)
+            double armor = Inv.totalArmor(p);
+            if (now - s.gearTick > 400) { s.armorSeen = armor; s.weaponSeen = 1; }
+            s.armorSeen = Math.max(armor, s.armorSeen * 0.98);
+            s.weaponSeen = Math.max(s.weaponSeen, Items.meleeValue(p.getItemInHand()));
+            if (p.getItemInHand() != null && p.getItemInHand().getType() == org.bukkit.Material.BOW) s.bowSeen = true;
+            s.healthSeen = p.getHealth();
+            s.gearTick = now;
+            if (ctx.world().voidBelow(floor(tl.getX()), floor(tl.getY() - 0.01) - 1, floor(tl.getZ()), 30)) s.overVoidTick = now;
             if (s.lastPos != null && now - s.lastSeenTick <= 8) {
                 double t = Math.max(1, now - s.lastSeenTick);
                 s.lastVel = tl.toVector().subtract(s.lastPos.toVector()).multiply(1.0 / t);
@@ -166,6 +178,67 @@ public final class Perception {
                 glanceDue = now + AIMath.msToTicks(ctx.rng, ctx.persona.skill.reactionMs * 1.3);
             }
         }
+    }
+
+    // ------------------------------------------------------------------------------------------------- fights
+
+    /** A fight between two other players we heard / saw: where, when, who hit. */
+    public static final class Fight {
+        public Location at;
+        public long tick, firstTick;
+        public Player attacker, victim;
+        public int hits;
+    }
+
+    private Fight fight;
+
+    private void noteFight(Player attacker, Location at, long now) {
+        Player victim = null;
+        double bd = 2.5 * 2.5;
+        for (Player p : at.getWorld().getPlayers()) {
+            if (p == attacker || p == ctx.player || !filter.relevant(p)) continue;
+            double d = p.getLocation().distanceSquared(at);
+            if (d < bd) { bd = d; victim = p; }
+        }
+        if (victim == null) return;
+        if (fight == null || now - fight.tick > 100 || fight.at.distanceSquared(at) > 100) {
+            fight = new Fight();
+            fight.firstTick = now;
+            fight.hits = 0;
+        }
+        fight.at = at.clone();
+        fight.tick = now;
+        fight.attacker = attacker;
+        fight.victim = victim;
+        fight.hits++;
+    }
+
+    /** The latest fight between two other players we noticed in the last `maxAgeTicks` (null if none). */
+    public Fight recentFight(long maxAgeTicks) {
+        if (fight == null || ctx.tick - fight.tick > maxAgeTicks) return null;
+        if (fight.attacker == null || fight.victim == null || fight.attacker.isDead() || fight.victim.isDead()) return null;
+        return fight;
+    }
+
+    /** Our own strength on the same scale as {@link Sighting#power()}. */
+    public double selfPower() {
+        return Inv.totalArmor(ctx.player) * 1.1 + (Inv.bestMeleeValue(ctx.player) - 1) * 1.6 + ctx.health() * 0.6;
+    }
+
+    /**
+     * The enemy is looking down a bow at us: bow in hand, facing us within a few degrees, at bow range. (What a
+     * player sees before stepping off the bridge.)
+     */
+    public boolean aimingBowAtMe(Sighting s) {
+        if (s == null || !s.visible || s.ally) return false;
+        Player p = s.player;
+        if (p.getItemInHand() == null || p.getItemInHand().getType() != org.bukkit.Material.BOW) return false;
+        Location me = ctx.pos();
+        Location their = p.getEyeLocation();
+        double d = their.distance(me);
+        if (d < 6 || d > 45) return false;
+        float yaw = AIMath.yawTo(their, me);
+        return Math.abs(AIMath.angleDiff(their.getYaw(), yaw)) < 14;
     }
 
     /** We got hit by `attacker`. */

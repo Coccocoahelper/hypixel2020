@@ -52,6 +52,23 @@ final class BotCommand implements CommandExecutor, TabCompleter {
                     if (args.length > 1 && args[1].equalsIgnoreCase("reset")) { net.h2020.bots.ai.nav.NavStats.reset(); sender.sendMessage(P + "navstats reset"); }
                     for (String l : net.h2020.bots.ai.nav.NavStats.report()) sender.sendMessage(l);
                     break;
+                case "swstats":
+                    if (args.length > 1 && args[1].equalsIgnoreCase("reset")) { net.h2020.bots.ai.brain.SwStats.reset(); sender.sendMessage(P + "swstats reset"); }
+                    if (args.length > 1 && args[1].equalsIgnoreCase("debug")) {
+                        net.h2020.bots.ai.brain.SwStats.debug = args.length > 2 ? args[2].equalsIgnoreCase("on") : !net.h2020.bots.ai.brain.SwStats.debug;
+                        sender.sendMessage(P + "swstats debug " + (net.h2020.bots.ai.brain.SwStats.debug ? "on" : "off"));
+                    }
+                    for (String l : net.h2020.bots.ai.brain.SwStats.report()) sender.sendMessage(l);
+                    break;
+                case "pvp": {
+                    // 2020 fight behaviour switch + telemetry (net.h2020.bots.ai.combat)
+                    String a = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "stats";
+                    if (a.equals("v1") || a.equals("v2") || a.equals("ab")) { net.h2020.bots.ai.combat.CombatStats.setMode(a); net.h2020.bots.ai.combat.CombatStats.save(); }
+                    else if (a.equals("reset")) net.h2020.bots.ai.combat.CombatStats.reset();
+                    else if (a.equals("debug")) net.h2020.bots.ai.combat.CombatStats.debug = !net.h2020.bots.ai.combat.CombatStats.debug;
+                    for (String l : net.h2020.bots.ai.combat.CombatStats.report()) sender.sendMessage(l);
+                    break;
+                }
                 case "navtrace":
                     net.h2020.bots.ai.nav.NavStats.trace = args.length > 1 && !args[1].equalsIgnoreCase("off") ? args[1] : null;
                     sender.sendMessage(P + "navtrace " + net.h2020.bots.ai.nav.NavStats.trace);
@@ -114,6 +131,7 @@ final class BotCommand implements CommandExecutor, TabCompleter {
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " cheat <name|all> <" + cheatNames() + ">");
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " look <name>" + ChatColor.GRAY + " - aim/physics debug");
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " navstats [reset] | navdebug [on|off]" + ChatColor.GRAY + " - stuck/path-failure counters per map");
+        s.sendMessage(P + ChatColor.YELLOW + "/" + label + " swstats [reset|debug [on|off]]" + ChatColor.GRAY + " - SkyWars plans, fight origins, cage-drop confusion per map");
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " tp <name|all> [player]" + ChatColor.GRAY + " - bring bot(s)");
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " goto <name>" + ChatColor.GRAY + " - teleport to bot");
         s.sendMessage(P + ChatColor.YELLOW + "/" + label + " say <name> <message>");

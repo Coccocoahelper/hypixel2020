@@ -30,6 +30,10 @@ public final class NavOptions {
     public boolean weave = true;
     /** Add known enemies (from perception) as path costs. Off when chasing someone. */
     public boolean avoidEnemies = true;
+    /** Highest drop (blocks) the route may take; -1 = from skill. Looting an island takes the drop into its cave. */
+    public int maxFall = -1;
+    /** Fall damage (half hearts) a drop may cost; -1 = default (5, never below 6 hp left). */
+    public double maxFallDamage = -1;
 
     public static NavOptions walk() { return new NavOptions(); }
 
