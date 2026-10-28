@@ -107,7 +107,7 @@ public final class CombatStats {
 
     private static double get(String k, int s) { double[] v = C.get(k); return v == null ? 0 : v[s]; }
 
-    public static List<String> report() {
+    /*public static List<String> report() {
         List<String> out = new ArrayList<>();
         out.add(String.format("§6[pvp] §e%s§7 active (mode %s); %.1f min sampled", v2 ? "v2" : "v1", mode, (System.currentTimeMillis() - since) / 60000.0));
         for (int s = 0; s < 2; s++) {
@@ -152,5 +152,5 @@ public final class CombatStats {
                     ff.length() > 0 ? " | fights:" + ff : ""));
         }
         return out;
-    }
+    }*/
 }

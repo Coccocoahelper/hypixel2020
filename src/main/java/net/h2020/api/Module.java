@@ -4,7 +4,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * A feature module. Enabled in this order by H2020Plugin:
- * core, maps, watchdog, bots, bedwars, skywars. Disabled in reverse.
+ * core, maps, bots, bedwars, skywars. Disabled in reverse.
  * Register services in enable(); look up other modules' services lazily (at game time), not in enable().
  */
 public interface Module {

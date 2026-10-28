@@ -1,7 +1,6 @@
 package net.h2020.skywars.game;
 
 import net.h2020.api.game.GameState;
-import net.h2020.api.watchdog.WatchdogBanEvent;
 import net.h2020.skywars.SkywarsModule;
 import net.h2020.skywars.kit.Kit;
 import net.h2020.skywars.kit.KitMenu;
@@ -63,12 +62,6 @@ public final class SkywarsListener implements Listener {
         if (g != null) g.removePlayer(e.getPlayer());
         BotService bs = H2020.find(BotService.class);
         try { if (bs != null && bs.isBot(e.getPlayer())) module.forgetKit(e.getPlayer()); } catch (Throwable ignored) { }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onBan(WatchdogBanEvent e) {
-        SkywarsGame g = game(e.player());
-        if (g != null) g.watchdogRemove(e.player());
     }
 
     // ------------------------------------------------------------------ damage

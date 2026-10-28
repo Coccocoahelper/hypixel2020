@@ -7,7 +7,6 @@ import net.h2020.bots.BotsModule;
 import net.h2020.core.CoreModule;
 import net.h2020.maps.MapsModule;
 import net.h2020.skywars.SkywarsModule;
-import net.h2020.watchdog.WatchdogModule;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
@@ -24,7 +23,7 @@ public final class H2020Plugin extends JavaPlugin {
         H2020.init(this);
         saveDefaultConfig();
         List<Module> order = Arrays.asList(
-                new CoreModule(), new MapsModule(), new WatchdogModule(),
+                new CoreModule(), new MapsModule(),
                 new BotsModule(), new BedwarsModule(), new SkywarsModule());
         for (Module m : order) {
             try {

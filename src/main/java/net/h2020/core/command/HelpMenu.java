@@ -45,10 +45,6 @@ public final class HelpMenu implements Listener {
             {"/bot list", "All bots and what they are doing"},
             {"/bot look ", "One bot's aim, movement and state"},
             {"/bot remove ", "Remove a bot (or all)"},
-            {"/wd alerts", "Toggle Watchdog staff alerts"},
-            {"/wd vl ", "A player's Watchdog violation levels"},
-            {"/wd ban ", "Watchdog-ban a player"},
-            {"/wd announce", "Broadcast the [WATCHDOG ANNOUNCEMENT] now"},
     };
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

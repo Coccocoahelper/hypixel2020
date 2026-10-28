@@ -2,7 +2,6 @@ package net.h2020.bots.ai;
 
 import net.h2020.api.game.events.GameKillEvent;
 import net.h2020.api.game.events.GameStateChangeEvent;
-import net.h2020.api.watchdog.WatchdogFlagEvent;
 import net.h2020.bots.ai.brain.BaseBrain;
 import net.h2020.bots.ai.brain.GameBrain;
 import net.h2020.bots.ai.perception.PlayerStats;
@@ -91,14 +90,6 @@ final class AIListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEat(PlayerItemConsumeEvent e) { SoundBus.emit(SoundBus.Kind.EAT, e.getPlayer().getLocation(), e.getPlayer()); }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onFlag(WatchdogFlagEvent e) {
-        if (e.player() == null) return;
-        PlayerStats.flagged(e.player());
-        BaseBrain b = BotAI.brainOf(e.player());
-        if (b instanceof GameBrain && b.context() != null) b.context().combat.onFlag(e.check().name());
-    }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onKill(GameKillEvent e) {

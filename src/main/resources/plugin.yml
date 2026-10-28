@@ -17,12 +17,6 @@ commands:
   bot:
     description: Bot tools (spawn, cheat profiles, list) - owned by bots module
     permission: h2020.admin
-  wd:
-    description: Watchdog staff tools (alerts, vl, ban) - owned by watchdog module
-    permission: h2020.admin
-  report:
-    description: Report a player
-    aliases: [wdr, watchdogreport]
   shout:
     description: Bed Wars shout chat
 permissions:

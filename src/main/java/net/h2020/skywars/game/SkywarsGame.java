@@ -16,8 +16,6 @@ import net.h2020.api.game.events.GameKillEvent;
 import net.h2020.api.game.events.GameStateChangeEvent;
 import net.h2020.api.map.MapKeys;
 import net.h2020.api.map.MapTemplate;
-import net.h2020.api.watchdog.CheckType;
-import net.h2020.api.watchdog.WatchdogService;
 import net.h2020.skywars.SkywarsModule;
 import net.h2020.skywars.kit.Kit;
 import net.h2020.skywars.kit.KitMenu;
@@ -826,19 +824,6 @@ public final class SkywarsGame implements SkywarsView {
         giveSpectatorItems(p);
     }
 
-    /** Watchdog removed (banned) this player: Hypixel's in-game notice, silent elimination. */
-    public void watchdogRemove(Player p) {
-        UUID u = p.getUniqueId();
-        if (!players.contains(u)) return;
-        for (Player q : players()) {
-            if (q.equals(p)) continue;
-            q.sendMessage(ChatColor.RED + "A player has been removed from your game.");
-            q.sendMessage(ChatColor.AQUA + "Use /report to continue helping out the server!");
-        }
-        alive.remove(u);
-        removePlayer(p);
-    }
-
     /** Respawn path after a real (vanilla) death: turn the player into a spectator where they respawned. */
     public void afterRespawn(Player p) {
         if (!players.contains(p.getUniqueId()) || alive.contains(p.getUniqueId()) || preGame()) return;
@@ -898,12 +883,6 @@ public final class SkywarsGame implements SkywarsView {
             sb.clearSidebar(p);
             if (type.teamSize > 1) sb.resetNametag(p);
         }
-    }
-
-    private void exemptMoving(Player p, long ms) {
-        WatchdogService wd = H2020.find(WatchdogService.class);
-        if (wd == null) return;
-        for (CheckType c : CheckType.values()) if (c.group == CheckType.Group.MOVING) wd.exempt(p, c, ms);
     }
 
     // =========================================================================================================

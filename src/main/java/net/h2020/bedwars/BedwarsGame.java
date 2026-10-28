@@ -484,12 +484,12 @@ public final class BedwarsGame implements BedwarsView {
         if (bp == null) return;
         if (state == GameState.WAITING || state == GameState.STARTING) {
             players.remove(p.getUniqueId());
-            if (!silent) broadcast(rankColor(p) + p.getName() + ChatColor.YELLOW + " has quit!");
+            broadcast(rankColor(p) + p.getName() + ChatColor.YELLOW + " has quit!");
         } else if (state == GameState.PLAYING) {
             boolean wasIn = bp.team != null && !bp.eliminated;
             players.remove(p.getUniqueId());
             if (wasIn) {
-                if (!silent) broadcast(feedName(p) + ChatColor.GRAY + " disconnected.");
+                broadcast(feedName(p) + ChatColor.GRAY + " disconnected.");
                 bp.eliminated = true;
                 bp.respawnAt = -1;
             }
@@ -1543,16 +1543,6 @@ public final class BedwarsGame implements BedwarsView {
         String line = ChatColor.GOLD + "[SHOUT] " + teamTag(bp) + rankName(p) + sep + msg.trim();
         broadcast(line);
         Bukkit.getConsoleSender().sendMessage("[" + id + "] " + line);
-    }
-
-    // =================================================================== watchdog
-
-    void watchdogRemoval(Player p) {
-        BwPlayer bp = data(p);
-        if (bp == null) return;
-        removePlayer(p, true);
-        broadcast(ChatColor.RED + "A player has been removed from your game.");
-        broadcast(ChatColor.AQUA + "Use /report to continue helping out the server!");
     }
 
     // =================================================================== misc for listeners/gadgets

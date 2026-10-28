@@ -1,6 +1,6 @@
-# Hypixel 2020
+# Hypixel Bot Server
 
-A recreation of Hypixel **SkyWars** and **Bed Wars** as they were in summer 2020, all in one Spigot plugin.
+A recreation of Hypixel **SkyWars** and **Bed Wars**, with some of the most accurate bots.
 
 - **Lightweight.** About 140 MB on disk after building, and about 1.6 GB of RAM and 1.2 CPU cores with around 80 bots online, you are able to host it locally.
 - **20 maps from 2020** for SkyWars and Bed Wars are included. The real Hypixel lobby is not.
@@ -15,9 +15,6 @@ A recreation of Hypixel **SkyWars** and **Bed Wars** as they were in summer 2020
   spectators.
 - **Bots:** each bot is a perfectly emulated serverside player, bots are also checked by the anticheat. Bots have human-like aim and CPS,
   bridging styles, looting, chat, and 2020-style names and skins. A configurable share of bots can cheat.
-- **Watchdog:** a packet-level anticheat modelled on NoCheatPlus's check set (moving, fight, block place/break,
-  inventory, net). It uses Hypixel-2020 presentation: delayed bans, `[WATCHDOG ANNOUNCEMENT]`, "A player has been
-  removed from your game.", `/report`.
 
 ## What you need
 
@@ -53,7 +50,6 @@ Use the compass or the NPCs in the lobby to join a game. Settings are in `run/pl
 | `/h2020 rank <player> <rank> [color]` | Set a rank, e.g. `/h2020 rank YourName MVP_PLUS RED` |
 | `/h2020 date today` | Show today's date on scoreboards instead of a 2020 one |
 | `/bot spawn [name] [cheat]` / `/bot list` | Spawn a bot / see what every bot is doing |
-| `/wd alerts` | Anticheat alerts on or off for you (off by default; everything is logged to `watchdog.log`) |
 | `/report <player>` | The 2020 report menu |
 
 

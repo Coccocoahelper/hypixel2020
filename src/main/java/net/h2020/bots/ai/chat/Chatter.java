@@ -21,8 +21,8 @@ public final class Chatter {
     private static final String[] DEATH_SUS = {"hacker", "wdr", "reach", "nice reach", "report", "hacks", "nice autoclicker",
             "watchdog where", "bro is cheating", "hacker lol", "ok hacker", "wdr him", "obviously hacking"};
     private static final String[] END_WIN = {"gg", "gg", "gf", "ggs", "gg wp", "gg"};
-    private static final String[] END_WIN_TOXIC = {"gg ez", "ez", "gg ez", "too ez", "L", "gg no re"};
-    private static final String[] END_LOSE = {"gg", "gg", "gf", "ggs", "gg wp", "gg close", "gg"};
+    private static final String[] END_WIN_TOXIC = {"gg ez", "ez", "gg ez", "too ez", "L", "gg no re", "l cheater"};
+    private static final String[] END_LOSE = {"gg", "gg", "gf", "ggs", "gg wp", "wp", "gg close", "gg"};
     private static final String[] LOBBY = {"lol", "anyone party?", "who wants to 1v1", "lag", "bedwars?", "hi", "anyone wanna duel",
             "skywars?", "lmao", "sup"};
 
@@ -32,7 +32,7 @@ public final class Chatter {
         Pending(String m, long d, boolean c) { msg = m; due = d; command = c; }
     }
     private static final String[] REPORT_REASONS = {"", "", "hacking", "killaura", "reach", "fly", "cheating", "hacks"};
-    private static final String[] REPORT_CMDS = {"wdr", "wdr", "report", "watchdogreport"};
+    //private static final String[] REPORT_CMDS = {"wdr", "wdr", "report", "watchdogreport"};
 
     private final BotContext ctx;
     private final ArrayDeque<Pending> queue = new ArrayDeque<>();
@@ -90,14 +90,14 @@ public final class Chatter {
     }
 
     /** Actually file a /wdr against a suspected cheater (Watchdog then boosts their priority), after a delay. */
-    public void report(String name) {
+    /*public void report(String name) {
         if (name == null || queue.size() > 2) return;
         String reason = REPORT_REASONS[ctx.rng.nextInt(REPORT_REASONS.length)];
         String line = REPORT_CMDS[ctx.rng.nextInt(REPORT_CMDS.length)] + " " + name + (reason.isEmpty() ? "" : " " + reason);
         int typing = 15 + (int) (line.length() * AIMath.range(ctx.rng, 1.2, 2.4)) + AIMath.range(ctx.rng, 30, 120);
         long base = queue.isEmpty() ? ctx.tick : queue.peekLast().due;
         queue.addLast(new Pending(line, Math.max(base, ctx.tick) + typing, true));
-    }
+    }*/
 
     public void gameEnd(boolean won) {
         if (won && ctx.persona.toxic && ctx.rng.nextDouble() < 0.5) { maybe(0.9, END_WIN_TOXIC, 10); return; }

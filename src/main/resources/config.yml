@@ -67,25 +67,3 @@ core:
     vertical-limit: 0.4
     extra-horizontal: 0.45
     extra-vertical: 0.085
-
-watchdog:
-  # "[WD] Name failed ..." chat alerts for admins. Off by default; /wd alerts toggles them for yourself.
-  staff-alerts: false
-  # The same alerts in the server console. Every flag is always written to plugins/Hypixel2020/watchdog.log.
-  console-alerts: false
-  # Reach limit for ops/admins (0 = vanilla 3.0 like everyone). Lets the owner film long-reach Kill Aura hits.
-  admin-reach-limit: 0
-  movement:
-    # Reproduce Hypixel's 2020 Watchdog blind spot for the "1/64 hover" fly (Y alternating +-1/16, ~2.15x sprint).
-    legacy-2020-hover-gap: false
-    # Reproduce its NCP-style bunnyhop allowance (jump up to 2.15x sprint, air ticks lose only 1/160 per tick).
-    legacy-2020-bhop-gap: false
-    # Hypixel 2020 had no working anti-knockback check: 0/0 velocity went unpunished.
-    legacy-2020-velocity-gap: false
-    # Hypixel 2020 let the classic "Hypixel" NoFall through: one onGround=true each time ~2.5-3 blocks were fallen
-    # resets the fall distance before it can damage. Constant onGround spoofs and denied landings stay caught.
-    legacy-2020-nofall-gap: false
-    # Hypixel 2020 let "packet criticals" through: 2-3 extra position packets on the spot (a rise of <= 0.0625, then
-    # a drop, onGround=false) right before the attack make vanilla crit. Only that burst, followed by its attack, is
-    # accepted (Critical, SurvivalFly, NoFall, Timer, FlyingFrequency, MorePackets, PacketOrder); anything else is checked.
-    legacy-2020-crits-gap: false

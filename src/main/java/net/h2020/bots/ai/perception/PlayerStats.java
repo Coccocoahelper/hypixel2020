@@ -61,17 +61,17 @@ public final class PlayerStats {
         return r.maxReachRecent;
     }
 
-    public static void flagged(Player p) {
+    /*public static void flagged(Player p) {
         Rec r = rec(p);
         r.lastFlagTick = SoundBus.now();
         r.flags++;
-    }
+    }*/
 
     /** Looked suspicious lately (Watchdog flags in the last 30s). */
-    public static boolean suspicious(Player p) {
+    /*public static boolean suspicious(Player p) {
         Rec r = RECS.get(p.getUniqueId());
         return r != null && SoundBus.now() - r.lastFlagTick < 600 && r.flags >= 3;
-    }
+    }*/
 
     public static void forget(Player p) { RECS.remove(p.getUniqueId()); }
 }

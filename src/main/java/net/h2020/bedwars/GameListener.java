@@ -2,7 +2,6 @@ package net.h2020.bedwars;
 
 import net.h2020.api.game.GameState;
 import net.h2020.api.game.TeamColor;
-import net.h2020.api.watchdog.WatchdogBanEvent;
 import net.h2020.bedwars.shop.ItemShop;
 import net.h2020.bedwars.shop.ShopCategory;
 import net.h2020.bedwars.shop.UpgradeShop;
@@ -667,14 +666,5 @@ final class GameListener implements Listener {
     public void onWorldChange(PlayerChangedWorldEvent e) {
         BedwarsGame g = module.gameOf(e.getPlayer());
         if (g != null && e.getFrom() == g.world && e.getPlayer().getWorld() != g.world) g.removePlayer(e.getPlayer());
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onBan(WatchdogBanEvent e) {
-        Player p = e.player();
-        if (p == null) return;
-        BedwarsGame g = module.gameOf(p);
-        if (g != null) g.watchdogRemoval(p);
-    }
-
+    }1
 }
