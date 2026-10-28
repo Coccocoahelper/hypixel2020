@@ -27,11 +27,13 @@ public final class BotsModule implements Module {
         ConfigurationSection cfg = plugin.getConfig().getConfigurationSection("bots");
         boolean fetch = cfg == null || cfg.getBoolean("fetchSkins", true);
         List<String> sources = cfg != null && cfg.isList("skinSources") ? cfg.getStringList("skinSources") : SkinRepository.DEFAULT_SOURCES;
+        boolean sprinting = cfg == null || cfg.getBoolean("sprinting", true);
+        boolean antiCheat = cfg != null && cfg.getBoolean("anti-cheat", false);
 
         skins = new SkinRepository(plugin);
         skins.start(sources, fetch);
 
-        manager = new BotManager(plugin, skins);
+        manager = new BotManager(plugin, skins, sprinting, antiCheat);
         manager.start();
         H2020.register(BotService.class, manager);
 

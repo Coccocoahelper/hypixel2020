@@ -64,18 +64,30 @@ public final class BotManager implements BotService, Listener {
     private boolean tickListDirty = true;
     private final SkinRepository skins;
     private final ProfileFactory profiles;
+    private final boolean sprintingEnabled;
+    private final boolean antiCheatEnabled;
     private BotDataGuard guard;
     private BukkitTask task;
 
     BotManager(JavaPlugin plugin, SkinRepository skins) {
+        this(plugin, skins, true, false);
+    }
+
+    BotManager(JavaPlugin plugin, SkinRepository skins, boolean sprintingEnabled, boolean antiCheatEnabled) {
         this.plugin = plugin;
         this.skins = skins;
         this.profiles = new ProfileFactory(rnd, skins, names);
+        this.sprintingEnabled = sprintingEnabled;
+        this.antiCheatEnabled = antiCheatEnabled;
     }
 
     Logger log() { return plugin.getLogger(); }
 
     SkinRepository skins() { return skins; }
+
+    boolean sprintingEnabled() { return sprintingEnabled; }
+
+    boolean antiCheatEnabled() { return antiCheatEnabled; }
 
     void start() {
         guard = BotDataGuard.install(server(), plugin.getLogger());

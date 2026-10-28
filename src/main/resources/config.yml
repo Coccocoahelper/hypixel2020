@@ -68,6 +68,12 @@ core:
     extra-horizontal: 0.45
     extra-vertical: 0.085
 
+bots:
+  fetchSkins: true
+  skinSources: []
+  sprinting: true
+  anti-cheat: false
+
 watchdog:
   # "[WD] Name failed ..." chat alerts for admins. Off by default; /wd alerts toggles them for yourself.
   staff-alerts: false

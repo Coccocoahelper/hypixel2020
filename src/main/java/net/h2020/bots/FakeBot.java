@@ -20,6 +20,8 @@ import java.util.logging.Level;
 final class FakeBot implements Bot {
     private final BotManager manager;
     private volatile BotProfile profile;
+    private final boolean sprintingEnabled;
+    private final boolean antiCheatEnabled;
     final EntityPlayer ep;
     final Player player;
     final VirtualClient client;
@@ -34,6 +36,8 @@ final class FakeBot implements Bot {
     FakeBot(BotManager manager, BotProfile profile, EntityPlayer ep, SocketAddress address, Random rnd) {
         this.manager = manager;
         this.profile = profile;
+        this.sprintingEnabled = manager.sprintingEnabled();
+        this.antiCheatEnabled = manager.antiCheatEnabled();
         this.ep = ep;
         this.player = ep.getBukkitEntity();
         this.client = new VirtualClient(this, ep, profile, rnd);
@@ -68,17 +72,18 @@ final class FakeBot implements Bot {
 
     /** Runtime cheat switch (/bot cheat). The profile object is replaced so profile().cheat stays truthful. */
     void setCheat(CheatProfile cheat) {
+        CheatProfile effective = antiCheatEnabled ? (cheat == null ? CheatProfile.NONE : cheat) : CheatProfile.NONE;
         BotProfile p = profile;
         profile = new BotProfile(p.name, p.uuid, p.skinValue, p.skinSignature, p.rank, p.plusColor, p.networkLevel,
-                p.pingMs, p.skill, cheat);
-        client.setCheat(cheat);
+                p.pingMs, p.skill, effective);
+        client.setCheat(effective);
     }
 
     private void resetInputs() {
         client.setMovement(0.0F, 0.0F);
         client.setJumping(false);
         client.setSneaking(false);
-        client.setSprinting(false);
+        client.setSprinting(sprintingEnabled);
         client.setLeftHeld(false, 0.0D);
         client.setRightHeld(false);
         client.clearAim();
