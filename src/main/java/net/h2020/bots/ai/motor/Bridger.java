@@ -78,6 +78,8 @@ public final class Bridger {
     private long lastGlanceTick = -1000;
     private boolean unconfirmed;       // support is our client's predicted block, not yet confirmed by the server
     private int invOpenTicks, swapWait;
+    private boolean stacking;
+    private int stackTicks;
 
     public Bridger(BotContext ctx) { this.ctx = ctx; }
 
@@ -111,6 +113,8 @@ public final class Bridger {
         this.lastF = -1; this.lastS = 0;
         this.breezyDir = ctx.rng.nextBoolean() ? 1 : -1;
         this.peek = false;
+        this.stacking = false;
+        this.stackTicks = 0;
         this.active = true;
     }
 
@@ -382,6 +386,39 @@ public final class Bridger {
         BlockFace tf = ctx.c.targetedFace();
         BlockFace want = faceOf(dx, dz);
         boolean rayOn = tb != null && tf == want && tb.getX() == sx && tb.getY() == sy && tb.getZ() == sz;
+
+        if (shouldStack(h, pos)) {
+            stacking = true;
+            stackTicks = 0;
+            ctx.motor.sneak(true);
+            ctx.motor.aimRotation(Motor.P_TASK, lookYaw(), pitch, AimIntent.PRECISE, 0.35);
+            return Result.RUNNING;
+        }
+
+        if (stacking) {
+            stackTicks++;
+            ctx.motor.sneak(true);
+            if (ctx.c.onGround() && stackTicks <= 2) {
+                ctx.motor.jump(true);
+                return Result.RUNNING;
+            }
+            Block st = ctx.player.getWorld().getBlockAt(sx, sy, sz);
+            BlockFace stackFace = BlockFace.UP;
+            Block stackTarget = ctx.c.targetedBlock();
+            BlockFace stackTf = ctx.c.targetedFace();
+            if (stackTarget != null && stackTarget.equals(st) && stackTf == stackFace && stackTicks >= 2) {
+                ctx.c.rightClick();
+                stacking = false;
+                stackTicks = 0;
+                return Result.RUNNING;
+            }
+            if (stackTicks > 9) {
+                stacking = false;
+                stackTicks = 0;
+            }
+            return Result.RUNNING;
+        }
+
         if (rayOn && wv.passable(nx, sy, nz)) {
             if (!rayWasOn) {
                 rayWasOn = true;
@@ -407,6 +444,17 @@ public final class Bridger {
             phase = Phase.STEPBACK; phaseTicks = 0; pauseLen = AIMath.range(ctx.rng, 2, 4);
         }
         return Result.RUNNING;
+    }
+
+    /** Legit players stack up during a rush or when a nearby enemy forces the pace, by jumping and placing a block
+     * underneath their feet instead of just walking the bridge line. This is a high-pressure, short-lived tactic, not
+     * a constant pillar. */
+    private boolean shouldStack(double h, Location pos) {
+        if (ctx.perception.enemiesWithin(16) == 0) return false;
+        if (ctx.c.onGround() == false || h > 0.15 || h < -0.2) return false;
+        if (placed < 1 || !Inv.holding(ctx.player, Inv.BLOCK)) return false;
+        if (ctx.rng.nextDouble() > (pressured ? 0.32 : 0.12)) return false;
+        return true;
     }
 
     /**
