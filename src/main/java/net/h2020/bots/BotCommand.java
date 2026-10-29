@@ -61,12 +61,10 @@ final class BotCommand implements CommandExecutor, TabCompleter {
                     for (String l : net.h2020.bots.ai.brain.SwStats.report()) sender.sendMessage(l);
                     break;
                 case "pvp": {
-                    // 2020 fight behaviour switch + telemetry (net.h2020.bots.ai.combat)
                     String a = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "stats";
                     if (a.equals("v1") || a.equals("v2") || a.equals("ab")) { net.h2020.bots.ai.combat.CombatStats.setMode(a); net.h2020.bots.ai.combat.CombatStats.save(); }
                     else if (a.equals("reset")) net.h2020.bots.ai.combat.CombatStats.reset();
                     else if (a.equals("debug")) net.h2020.bots.ai.combat.CombatStats.debug = !net.h2020.bots.ai.combat.CombatStats.debug;
-                    for (String l : net.h2020.bots.ai.combat.CombatStats.report()) sender.sendMessage(l);
                     break;
                 }
                 case "navtrace":
@@ -173,7 +171,6 @@ final class BotCommand implements CommandExecutor, TabCompleter {
         return Collections.singletonList(need(nameOrAll));
     }
 
-    // ------------------------------------------------------------------ subcommands
     private void spawn(final CommandSender s, String[] args) {
         String nameArg = args.length > 1 ? args[1] : "random";
         final CheatProfile cheat = args.length > 2 ? parseCheat(args[2]) : CheatProfile.NONE;
