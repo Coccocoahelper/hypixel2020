@@ -666,5 +666,5 @@ final class GameListener implements Listener {
     public void onWorldChange(PlayerChangedWorldEvent e) {
         BedwarsGame g = module.gameOf(e.getPlayer());
         if (g != null && e.getFrom() == g.world && e.getPlayer().getWorld() != g.world) g.removePlayer(e.getPlayer());
-    }1
+    }
 }
