@@ -1,25 +1,63 @@
-name: Hypixel2020
-version: 1.0.0
-main: net.h2020.H2020Plugin
-author: h2020
-description: Private Hypixel 2020 recreation (Bed Wars, SkyWars, Watchdog, human-like bots)
-load: POSTWORLD
-commands:
-  play:
-    description: Join a game, e.g. /play bedwars_eight_one
-    usage: /play <game>
-  lobby:
-    description: Return to lobby
-    aliases: [l, hub]
-  h2020:
-    description: Admin/video tools (bots, games, watchdog)
-    permission: h2020.admin
-  bot:
-    description: Bot tools (spawn, cheat profiles, list) - owned by bots module
-    permission: h2020.admin
-  shout:
-    description: Bed Wars shout chat
-permissions:
-  h2020.admin:
-    description: Admin and video tools
-    default: op
+package net.h2020.bots.ai.perception;
+
+import org.bukkit.entity.Player;
+
+import java.util.ArrayDeque;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * What players would notice about each other: swing rate (CPS) and hit distances.
+ * Used for bot threat estimates and behavior tuning.
+ */
+public final class PlayerStats {
+    private static final class Rec {
+        final ArrayDeque<Long> swings = new ArrayDeque<>();
+        double maxReachRecent;
+        long reachTick;
+    }
+
+    private static final Map<UUID, Rec> RECS = new ConcurrentHashMap<>();
+
+    private PlayerStats() {}
+
+    private static Rec rec(Player p) {
+        Rec r = RECS.get(p.getUniqueId());
+        if (r == null) { r = new Rec(); RECS.put(p.getUniqueId(), r); }
+        return r;
+    }
+
+    public static void swing(Player p) {
+        Rec r = rec(p);
+        long now = SoundBus.now();
+        r.swings.addLast(now);
+        while (!r.swings.isEmpty() && now - r.swings.peekFirst() > 40) r.swings.pollFirst();
+    }
+
+    /** Swings per second over the last 2 seconds. */
+    public static double cps(Player p) {
+        Rec r = RECS.get(p.getUniqueId());
+        if (r == null) return 0;
+        long now = SoundBus.now();
+        int n = 0;
+        for (Long t : r.swings) if (now - t <= 40) n++;
+        return n / 2.0;
+    }
+
+    public static void hit(Player attacker, double distance) {
+        Rec r = rec(attacker);
+        long now = SoundBus.now();
+        if (now - r.reachTick > 200) r.maxReachRecent = 0;
+        r.maxReachRecent = Math.max(r.maxReachRecent, distance);
+        r.reachTick = now;
+    }
+
+    public static double recentReach(Player p) {
+        Rec r = RECS.get(p.getUniqueId());
+        if (r == null || SoundBus.now() - r.reachTick > 200) return 0;
+        return r.maxReachRecent;
+    }
+
+    public static void forget(Player p) { RECS.remove(p.getUniqueId()); }
+}
