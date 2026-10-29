@@ -7,7 +7,7 @@ RUN="$ROOT/run"
 mkdir -p "$RUN/plugins/Hypixel2020/maps"
 
 PLUGIN_URL="${PLUGIN_URL:-https://github.com/Coccocoahelper/hypixel2020/releases/latest/download/Hypixel2020.jar}"
-WINDSPIGOT_URL="${WINDSPIGOT_URL:-https://ci.codemc.io/job/WindSpigot/lastSuccessfulBuild/artifact/target/WindSpigot.jar}"
+WINDSPIGOT_URL="${WINDSPIGOT_URL:-https://github.com/Wind-Development/WindSpigot/releases/latest/download/WindSpigot-2.1.4.jar}"
 JAVA25_DIR="$(ls -d "$ROOT"/.tools/jdk25*/bin 2>/dev/null | head -1)"
 [ -n "$JAVA25_DIR" ] || JAVA25_DIR="${JAVA25_HOME:+$JAVA25_HOME/bin}"
 if [ -z "$JAVA25_DIR" ]; then

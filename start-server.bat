@@ -9,7 +9,7 @@ set "RUN=%ROOT%\run"
 if not exist "%RUN%\plugins\Hypixel2020\maps" mkdir "%RUN%\plugins\Hypixel2020\maps"
 
 set "PLUGIN_URL=https://github.com/Coccocoahelper/hypixel2020/releases/latest/download/Hypixel2020.jar"
-set "WINDSPIGOT_URL=https://ci.codemc.io/job/WindSpigot/lastSuccessfulBuild/artifact/target/WindSpigot.jar"
+set "WINDSPIGOT_URL=https://github.com/Wind-Development/WindSpigot/releases/latest/download/WindSpigot-2.1.4.jar"
 
 set "JAVA25="
 for /d %%D in ("%ROOT%\.tools\jdk25*") do set "JAVA25=%%~fD\bin\java.exe"
