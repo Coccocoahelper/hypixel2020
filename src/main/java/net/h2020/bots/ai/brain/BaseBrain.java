@@ -132,10 +132,10 @@ public abstract class BaseBrain implements BotBrain {
     public void onDeath(Player killer, boolean voidDeath) {
         boolean sus = killer != null && (net.h2020.bots.ai.perception.PlayerStats.cps(killer) > 14.5
                 || net.h2020.bots.ai.perception.PlayerStats.recentReach(killer) > 3.6
-                || net.h2020.bots.ai.perception.PlayerStats.suspicious(killer));
+                /*|| net.h2020.bots.ai.perception.PlayerStats.suspicious(killer)*/);
         ctx.chat.died(killer != null, sus, voidDeath);
         // some players really /wdr the guy who killed them (more so the chatty and the salty ones)
-        if (sus && ctx.rng.nextDouble() < 0.2 + 0.4 * ctx.persona.skill.chattiness) ctx.chat.report(killer.getName());
+        //if (sus && ctx.rng.nextDouble() < 0.2 + 0.4 * ctx.persona.skill.chattiness) ctx.chat.report(killer.getName());
         ctx.combat.disengage();
         ctx.nav.stop();
     }

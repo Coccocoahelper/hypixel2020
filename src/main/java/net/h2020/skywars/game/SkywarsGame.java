@@ -262,7 +262,6 @@ public final class SkywarsGame implements SkywarsView {
         names.put(u, p.getName());
         kills.put(u, 0);
 
-        exemptMoving(p, 4000);
         Location spawn = team.island.memberSpawn(slot);
         p.teleport(spawn);
         prepareWaiting(p);
@@ -494,7 +493,6 @@ public final class SkywarsGame implements SkywarsView {
             spectator.sendMessage(ChatColor.RED + "That player is no longer alive!");
             return;
         }
-        exemptMoving(spectator, 3000);
         spectator.teleport(t.getLocation());
         spectator.sendMessage(ChatColor.GRAY + "Teleported to " + coloredName(t));
     }
@@ -565,13 +563,11 @@ public final class SkywarsGame implements SkywarsView {
             if (preGame()) {
                 SkywarsTeam t = teamOf.get(u);
                 if (t != null && y < t.island.spawn.getY() - 3) {
-                    exemptMoving(p, 3000);
                     p.teleport(t.island.memberSpawn(slotOf(u)));
                 }
             } else if (alive.contains(u) && state == GameState.PLAYING) {
                 if (y < 0) eliminate(p, DeathCause.VOID, recentAttacker(p), false, false);
             } else if (y < 0) {
-                exemptMoving(p, 3000);
                 p.setFallDistance(0f);
                 p.teleport(spectatorSpawn);
             }
@@ -668,7 +664,6 @@ public final class SkywarsGame implements SkywarsView {
             for (PotionEffect e : p.getActivePotionEffects()) p.removePotionEffect(e.getType());
             module.selectedKit(p).apply(p, insane());
             fallProtect.put(u, protectUntil);
-            exemptMoving(p, 4000);
         }
         for (Island isl : islands) if (isl.cage != null) isl.cage.remove();
         cagesOpen = true;
@@ -808,7 +803,6 @@ public final class SkywarsGame implements SkywarsView {
         p.setFireTicks(0);
         p.setFallDistance(0f);
         p.setVelocity(new Vector(0, 0, 0));
-        exemptMoving(p, 60L * 60L * 1000L);
         p.setAllowFlight(true);
         p.setFlying(true);
         p.spigot().setCollidesWithEntities(false);
