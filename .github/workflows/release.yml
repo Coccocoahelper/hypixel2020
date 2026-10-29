@@ -31,6 +31,9 @@ jobs:
           java-version: '17'
           cache: gradle
 
+      - name: Fix permissions
+        run: chmod +x gradlew
+
       - name: Build plugin
         run: ./gradlew --no-daemon build
 
