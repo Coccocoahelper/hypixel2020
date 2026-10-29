@@ -1,0 +1,123 @@
+knockback:
+  profiles:
+    vanilla:
+      stop-sprint: true
+      friction-horizontal: 2.0
+      friction-vertical: 2.0
+      horizontal: 0.4
+      vertical: 0.4
+      vertical-max: 0.4
+      vertical-min: -1.0
+      extra-horizontal: 0.5
+      extra-vertical: 0.1
+      wtap-extra-horizontal: 0.5
+      wtap-extra-vertical: 0.1
+      add-horizontal: 0.0
+      add-vertical: 0.0
+      projectiles:
+        rod:
+          horizontal: 0.4
+          vertical: 0.4
+        arrow:
+          horizontal: 0.4
+          vertical: 0.4
+        pearl:
+          horizontal: 0.4
+          vertical: 0.4
+        snowball:
+          horizontal: 0.4
+          vertical: 0.4
+        egg:
+          horizontal: 0.4
+          vertical: 0.4
+    windpvp:
+      stop-sprint: true
+      friction-horizontal: 2.0
+      friction-vertical: 2.0
+      horizontal: 0.35
+      vertical: 0.35
+      vertical-max: 0.4
+      vertical-min: -1.0
+      extra-horizontal: 0.425
+      extra-vertical: 0.085
+      wtap-extra-horizontal: 0.425
+      wtap-extra-vertical: 0.085
+      add-horizontal: 0.0
+      add-vertical: 0.0
+      projectiles:
+        rod:
+          horizontal: 0.425
+          vertical: 0.425
+        arrow:
+          horizontal: 0.425
+          vertical: 0.425
+        pearl:
+          horizontal: 0.35
+          vertical: 0.35
+        snowball:
+          horizontal: 0.425
+          vertical: 0.425
+        egg:
+          horizontal: 0.425
+          vertical: 0.425
+    hypixel:
+      stop-sprint: false
+      friction-horizontal: 1.0
+      friction-vertical: 2.0
+      horizontal: 0.46
+      vertical: 0.4
+      vertical-max: 0.47075
+      vertical-min: -1.0
+      extra-horizontal: 0.5
+      extra-vertical: 0.1
+      wtap-extra-horizontal: 0.22
+      wtap-extra-vertical: 0.08
+      add-horizontal: 0.0
+      add-vertical: 0.01
+      projectiles:
+        rod:
+          horizontal: 0.4
+          vertical: 0.4
+        arrow:
+          horizontal: 0.4
+          vertical: 0.4
+        pearl:
+          horizontal: 0.4
+          vertical: 0.4
+        snowball:
+          horizontal: 0.4
+          vertical: 0.4
+        egg:
+          horizontal: 0.4
+          vertical: 0.4
+    kohi:
+      stop-sprint: true
+      friction-horizontal: 2.0
+      friction-vertical: 2.0
+      horizontal: 0.35
+      vertical: 0.35
+      vertical-max: 0.4
+      vertical-min: -1.0
+      extra-horizontal: 0.425
+      extra-vertical: 0.085
+      wtap-extra-horizontal: 0.425
+      wtap-extra-vertical: 0.085
+      add-horizontal: 0.0
+      add-vertical: 0.0
+      projectiles:
+        rod:
+          horizontal: 0.35
+          vertical: 0.35
+        arrow:
+          horizontal: 0.35
+          vertical: 0.35
+        pearl:
+          horizontal: 0.35
+          vertical: 0.35
+        snowball:
+          horizontal: 0.35
+          vertical: 0.35
+        egg:
+          horizontal: 0.35
+          vertical: 0.35
+  current: hypixel
